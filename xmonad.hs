@@ -25,7 +25,7 @@ manageHook' = composeAll
               , resource  =? "kicker"         --> doIgnore
               ] <+> doF W.swapDown
 
--- workspaces' = ["web", "dev", "chat" ] ++ map show [4..9]
+workspaces' = ["web", "dev", "com" ] ++ map show [4..9]
 
 layoutHook' =
 --    onWorkspace "1" (bigTiled ||| Full) $
