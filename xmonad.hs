@@ -45,12 +45,6 @@ mouse' (XConfig {XMonad.modMask = modMask'}) = M.fromList $
 ifFloat w f = withWindowSet $ \s ->
               if (M.member w (floating s)) then f w else return ()
 
-moveIfFloating w = withWindowSet $ \s -> do
-                     focus w
-                     if (M.member w (floating s)) then
-                          mouseMoveWindow w else
-                          windows $ W.sink w
-
 xpConfig =
     XPC { font              = "-misc-fixed-*-*-*-*-10-*-*-*-*-*-*-*"
         , bgColor           = "#3f3f3f"
@@ -68,12 +62,15 @@ logHook' = do ewmhDesktopsLogHook
               return ()
 
 manageHook' = composeAll
-              [ className =? "Gimp"           --> doFloat
-              , className =? "Firefox-bin"    --> doF (W.shift "web")
-              , resource  =? "desktop_window" --> doIgnore
-              , resource  =? "kdesktop"       --> doIgnore
-              , resource  =? "gnome-panel"    --> doIgnore
-              , resource  =? "kicker"         --> doIgnore
+              [ className =? "Emacs"           --> doF (W.shift "dev")
+              , className =? "Firefox-bin"     --> doF (W.shift "web")
+              , className =? "Gimp"            --> doFloat
+              , className =? "Pidgin"          --> doF (W.shift "com")
+              , className =? "Thunderbird-bin" --> doF (W.shift "com")
+              , resource  =? "desktop_window"  --> doIgnore
+              , resource  =? "kdesktop"        --> doIgnore
+              , resource  =? "gnome-panel"     --> doIgnore
+              , resource  =? "kicker"          --> doIgnore
               ] <+> doF W.swapDown
 
 workspaces' = ["web", "dev", "com" ] ++ map show [4..9]
