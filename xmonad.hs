@@ -36,18 +36,23 @@ keys = M.fromList $
        , ((modMask .|. shiftMask, xK_p), windowPromptGoto xpConfig)
        ]
 
+-- TODO: clean up the isFloat/ifFloat stuff
 mouse (XConfig {XMonad.modMask = modMask}) = M.fromList $
     [ ((modMask .|. shiftMask, button1), (\w -> focus w >> float w))
-    , ((modMask, button1), (\w -> focus w >>
-                                  ifFloat w mouseMoveWindow))
-    -- button 2 is middle click
+    , ((modMask, button1), (\w -> focus w >> doWithWS (mouseMove w)))
     , ((modMask, button2), (\w -> focus w >> windows W.swapMaster))
-    , ((modMask, button3), (\w -> focus w >> 
-                                  ifFloat w mouseResizeWindow))
+    , ((modMask, button3), (\w -> focus w >> doWithWS (mouseResize w)))
     ]
 
-ifFloat w f = withWindowSet $ \s ->
-              if (M.member w (floating s)) then f w else return ()
+isFloat w ws = M.member w $ floating ws
+
+mouseMove w ws | isFloat w ws = mouseMoveWindow w
+               | otherwise    = return ()
+
+mouseResize w ws | isFloat w ws = mouseResizeWindow w
+                 | otherwise    = return ()
+
+doWithWS f = gets windowset >>= \s -> f s
 
 xpConfig =
     XPC { font              = "-misc-fixed-*-*-*-*-10-*-*-*-*-*-*-*"
