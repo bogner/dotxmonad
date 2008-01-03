@@ -6,11 +6,12 @@ import qualified XMonad
     ,defaultGaps,layoutHook,modMask,terminal,normalBorderColor,focusedBorderColor)
 import qualified XMonad.StackSet as W
 import XMonad.Hooks.EwmhDesktops
+import XMonad.Layout.Grid
+import XMonad.Layout.NoBorders
+--import XMonad.Layout.PerWorkspace
 import XMonad.Prompt
 import XMonad.Prompt.Shell
 import XMonad.Prompt.Window
---import XMonad.Layout.PerWorkspace
-import XMonad.StackSet (floating)
 
 import qualified Data.Map as M
 import Data.Bits ((.|.))
@@ -40,10 +41,10 @@ mouse (XConfig {XMonad.modMask = modMask}) = M.fromList $
     [ ((modMask .|. shiftMask, button1), (\w -> focus w >> float w))
     , ((modMask, button1), (\w -> focus w >> doWithWS (mouseMove w)))
     , ((modMask, button2), (\w -> focus w >> windows W.swapMaster))
-    , ((modMask, button3), (\w -> focus w >> doWithWS (mouseResize w)))
+    , ((modMask .|. controlMask, button1), (\w -> focus w >> doWithWS (mouseResize w)))
     ]
 
-isFloat w ws = M.member w $ floating ws
+isFloat w ws = M.member w $ W.floating ws
 
 mouseMove w ws | isFloat w ws = mouseMoveWindow w
                | otherwise    = return ()
@@ -63,7 +64,7 @@ mouseResize w ws | isFloat w ws = mouseResizeWindow w
 doWithWS f = gets windowset >>= \s -> f s
 
 xpConfig =
-    XPC { font              = "-misc-fixed-*-*-*-*-10-*-*-*-*-*-*-*"
+    XPC { font              = "xft:Bitstream Vera Sans Mono:pixelsize=10"
         , bgColor           = "#3f3f3f"
         , fgColor           = "#dcdccc"
         , fgHLight          = "#3f3f3f"
@@ -91,7 +92,7 @@ workspaces = ["web", "dev", "com" ] ++ map show [4..9]
 
 layoutHook =
 --    onWorkspace "1" (bigTiled ||| Full) $
-    tiled ||| bigTiled ||| Mirror tiled ||| Full
+    tiled ||| bigTiled ||| Mirror tiled ||| Grid ||| noBorders Full
         where
           tiled    = Tall nmaster delta (1/2)
           bigTiled = Tall nmaster delta (11/16)
