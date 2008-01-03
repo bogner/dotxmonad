@@ -36,7 +36,6 @@ keys = M.fromList $
        , ((modMask .|. shiftMask, xK_p), windowPromptGoto xpConfig)
        ]
 
--- TODO: clean up the isFloat/ifFloat stuff
 mouse (XConfig {XMonad.modMask = modMask}) = M.fromList $
     [ ((modMask .|. shiftMask, button1), (\w -> focus w >> float w))
     , ((modMask, button1), (\w -> focus w >> doWithWS (mouseMove w)))
@@ -48,6 +47,15 @@ isFloat w ws = M.member w $ floating ws
 
 mouseMove w ws | isFloat w ws = mouseMoveWindow w
                | otherwise    = return ()
+-- if we can determine what window is at a given x y coord, then
+{-
+moveTiled w = whenX (isClient w) $ withDisplay $ \d -> do
+                io $ raiseWindow d w -- we probably don't need this
+                (_, _, _, ox', oy', _, _, _) <- io $ queryPointer d w
+                let ox = fromIntegral ox'
+                    oy = fromIntegral oy'
+                mouseDrag (\ex ey -> io $ swapWindows (windowAt ex ey) (windowAt ox oy))
+-}
 
 mouseResize w ws | isFloat w ws = mouseResizeWindow w
                  | otherwise    = return ()
