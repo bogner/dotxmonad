@@ -47,9 +47,15 @@ instance LayoutClass Grid a where
     description _ = "Grid"
 
 tile :: Rectangle -> Int -> [Rectangle]
-tile r n = tile' r n c
-    where c = ceiling . sqrt . fromIntegral $ n
-          tile' r 1 _ = [r]
-          tile' r n c = splitVertically n' r1 : tile' r2 n' c
-              where n' = n/c
-                    (r1, r2) = splitHorizontallyBy 1/c r
+tile rect nwin = tile' rect nwin ncol
+    where ncol = ceiling . (sqrt :: Double -> Double) . fromIntegral $ nwin
+          tile' r n c | n > c = splitVertically n' r1 ++ tile' r2 (n-n') c
+                      | otherwise = splitVertically n r
+              where n' = divCeil n c
+                    (r1, r2) = splitHorizontallyBy ((1 / fromIntegral c) :: Double) r
+
+divCeil :: (Integral a) => a -> a -> a
+divCeil x y | r == 0    = q
+            | otherwise = q + 1
+    where (q,r) = divMod x y
+
