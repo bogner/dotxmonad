@@ -39,36 +39,38 @@ keys = M.fromList $
 
 mouse (XConfig {XMonad.modMask = modMask}) = M.fromList $
     [ ((modMask .|. shiftMask, button1), (\w -> focus w >> float w))
-    , ((modMask, button1), (\w -> focus w >> doWithWS (mouseMove w)))
+    , ((modMask, button1),
+       (\w -> focus w >> applyWindowSet (mouseMove w)))
     , ((modMask, button2), (\w -> focus w >> windows W.swapMaster))
-    , ((modMask .|. controlMask, button1), (\w -> focus w >> doWithWS (mouseResize w)))
+    , ((modMask .|. controlMask, button1),
+       (\w -> focus w >> applyWindowSet (mouseResize w)))
     ]
 
 isFloat w ws = M.member w $ W.floating ws
 
 mouseMove w ws | isFloat w ws = mouseMoveWindow w
                | otherwise    = return ()
--- if we can determine what window is at a given x y coord, then
+-- TODO: if we can determine what window is at a given x y coord, then
 {-
 moveTiled w = whenX (isClient w) $ withDisplay $ \d -> do
                 io $ raiseWindow d w -- we probably don't need this
                 (_, _, _, ox', oy', _, _, _) <- io $ queryPointer d w
                 let ox = fromIntegral ox'
                     oy = fromIntegral oy'
-                mouseDrag (\ex ey -> io $ swapWindows (windowAt ex ey) (windowAt ox oy))
+                mouseDrag (\ex ey -> io $ swapWins (windowAt ex ey) (windowAt ox oy))
 -}
 
 mouseResize w ws | isFloat w ws = mouseResizeWindow w
                  | otherwise    = return ()
 
-doWithWS f = gets windowset >>= \s -> f s
+applyWindowSet f = gets windowset >>= \s -> f s
 
 xpConfig =
     XPC { font              = "xft:Bitstream Vera Sans Mono:pixelsize=10"
         , bgColor           = "#3f3f3f"
         , fgColor           = "#dcdccc"
-        , fgHLight          = "#3f3f3f"
-        , bgHLight          = "#dcdccc"
+        , fgHLight          = "#94bff3"
+--        , bgHLight          = "#dcdccc"
         , borderColor       = "#dcdccc"
         , promptBorderWidth = 1
         , position          = Top
@@ -86,15 +88,16 @@ manageHook = composeAll
              , resource  =? "kdesktop"        --> doIgnore
              , resource  =? "gnome-panel"     --> doIgnore
              , resource  =? "kicker"          --> doIgnore
+             , resource  =? "xdvi"            --> doF W.swapUp
              ] <+> doF W.swapDown
 
 workspaces = ["web", "dev", "com" ] ++ map show [4..9]
 
 layoutHook =
 --    onWorkspace "1" (bigTiled ||| Full) $
-    tiled ||| bigTiled ||| Mirror tiled ||| Grid ||| noBorders Full
+    tiled ||| bigTiled ||| Mirror tiled ||| Mirror Grid ||| noBorders Full
         where
           tiled    = Tall nmaster delta (1/2)
           bigTiled = Tall nmaster delta (11/16)
-          nmaster = 1
-          delta   = 3/100
+          nmaster  = 1
+          delta    = 3/100
