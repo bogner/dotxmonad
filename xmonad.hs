@@ -6,6 +6,7 @@ import qualified XMonad
     ,defaultGaps,layoutHook,modMask,terminal,normalBorderColor,focusedBorderColor)
 import qualified XMonad.StackSet as W
 import XMonad.Hooks.EwmhDesktops
+import XMonad.Hooks.ManageDocks
 import XMonad.Layout.Grid
 import XMonad.Layout.NoBorders
 --import XMonad.Layout.PerWorkspace
@@ -19,8 +20,7 @@ import Data.Bits ((.|.))
 main = xmonad bogConfig
 
 bogConfig = defaultConfig
-            { XMonad.defaultGaps   = [(24,0,0,0)]
-            , XMonad.keys          = \c -> keys `M.union` XMonad.keys defaultConfig c
+            { XMonad.keys          = \c -> keys `M.union` XMonad.keys defaultConfig c
             , XMonad.mouseBindings = mouse
             , XMonad.logHook       = ewmhDesktopsLogHook
             , XMonad.manageHook    = manageHook
@@ -35,6 +35,7 @@ modMask = mod4Mask
 keys = M.fromList $
        [ ((modMask,               xK_p), shellPrompt xpConfig)
        , ((modMask .|. shiftMask, xK_p), windowPromptGoto xpConfig)
+       , ((modMask,               xK_b), sendMessage ToggleStruts)
        ]
 
 mouse (XConfig {XMonad.modMask = modMask}) = M.fromList $
@@ -77,21 +78,20 @@ xpConfig = defaultXPConfig
 
 manageHook = composeAll
              [ className =? "Emacs"           --> doF (W.shift "dev")
-             , className =? "Firefox-bin"     --> doF (W.shift "web")
+             , className =? "Firefox-bin"     --> doF (W.shift "web" . W.swapUp)
              , className =? "Pidgin"          --> doF (W.shift "com")
              , className =? "Thunderbird-bin" --> doF (W.shift "com")
-             , resource  =? "desktop_window"  --> doIgnore
-             , resource  =? "kdesktop"        --> doIgnore
-             , resource  =? "gnome-panel"     --> doIgnore
-             , resource  =? "stalonetray"     --> doIgnore
-             , resource  =? "kicker"          --> doIgnore
+             , className =? "xdvi"            --> doF (W.swapUp)
+             , manageDocks
              ] <+> doF W.swapDown
 
 workspaces = ["web", "dev", "com" ] ++ map show [4..9]
 
 layoutHook =
 --    onWorkspace "1" (bigTiled ||| Full) $
-    tiled ||| bigTiled ||| Mirror tiled ||| Mirror Grid ||| noBorders Full
+    avoidStruts $
+    tiled ||| bigTiled ||| Mirror tiled
+              ||| Mirror Grid ||| noBorders Full
         where
           tiled    = Tall nmaster delta (1/2)
           bigTiled = Tall nmaster delta (11/16)
