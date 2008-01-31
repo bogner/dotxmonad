@@ -9,7 +9,6 @@ import XMonad.Hooks.EwmhDesktops
 import XMonad.Hooks.ManageDocks
 import XMonad.Layout.Grid
 import XMonad.Layout.NoBorders
---import XMonad.Layout.PerWorkspace
 import XMonad.Prompt
 import XMonad.Prompt.Shell
 import XMonad.Prompt.Window
@@ -41,16 +40,17 @@ keys = M.fromList $
 mouse (XConfig {XMonad.modMask = modMask}) = M.fromList $
     [ ((modMask .|. shiftMask, button1), (\w -> focus w >> float w))
     , ((modMask, button1),
-       (\w -> focus w >> applyWindowSet (mouseMove w)))
+       (\w -> focus w >> withFloat mouseMoveWindow w))
     , ((modMask, button2), (\w -> focus w >> windows W.swapMaster))
     , ((modMask .|. controlMask, button1),
-       (\w -> focus w >> applyWindowSet (mouseResize w)))
+       (\w -> focus w >> withFloat mouseResizeWindow w))
     ]
 
-isFloat w ws = M.member w $ W.floating ws
+withFloat f w = gets windowset >>= \ws -> if (isFloat w ws)
+                                          then f w
+                                          else return ()
+    where isFloat w ws = M.member w $ W.floating ws
 
-mouseMove w ws | isFloat w ws = mouseMoveWindow w
-               | otherwise    = return ()
 -- TODO: if we can determine what window is at a given x y coord, then
 {-
 moveTiled w = whenX (isClient w) $ withDisplay $ \d -> do
@@ -60,11 +60,6 @@ moveTiled w = whenX (isClient w) $ withDisplay $ \d -> do
                     oy = fromIntegral oy'
                 mouseDrag (\ex ey -> io $ swapWins (windowAt ex ey) (windowAt ox oy))
 -}
-
-mouseResize w ws | isFloat w ws = mouseResizeWindow w
-                 | otherwise    = return ()
-
-applyWindowSet f = gets windowset >>= \s -> f s
 
 xpConfig = defaultXPConfig
            { font        = "xft:Bitstream Vera Sans Mono:pixelsize=10"
@@ -82,13 +77,13 @@ manageHook = composeAll
              , className =? "Pidgin"          --> doF (W.shift "com")
              , className =? "Thunderbird-bin" --> doF (W.shift "com")
              , resource  =? "xdvi"            --> doF W.swapUp
+             , resource  =? "gv"            --> doF W.swapUp
              , manageDocks
              ] <+> doF W.swapDown
 
 workspaces = ["web", "dev", "com" ] ++ map show [4..9]
 
 layoutHook =
---    onWorkspace "1" (bigTiled ||| Full) $
     avoidStruts $
     tiled ||| bigTiled ||| Mirror tiled
               ||| Mirror Grid ||| noBorders Full
