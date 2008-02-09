@@ -11,7 +11,10 @@ import XMonad.Layout.Grid
 import XMonad.Layout.NoBorders
 import XMonad.Prompt
 import XMonad.Prompt.Shell
-import XMonad.Prompt.Window
+
+import XMonad.Actions.WindowGo
+import XMonad.Actions.WindowBringer
+import Data.List
 
 import qualified Data.Map as M
 import Data.Bits ((.|.))
@@ -33,7 +36,7 @@ modMask = mod4Mask
 
 keys = M.fromList $
        [ ((modMask,               xK_p), shellPrompt xpConfig)
-       , ((modMask .|. shiftMask, xK_p), windowPromptGoto xpConfig)
+       , ((modMask .|. shiftMask, xK_p), runOrRaisePrompt xpConfig)
        , ((modMask,               xK_b), sendMessage ToggleStruts)
        ]
 
@@ -92,3 +95,18 @@ layoutHook =
           bigTiled = Tall nmaster delta (11/16)
           nmaster  = 1
           delta    = 3/100
+
+data RunOrRaisePrompt = RRP
+instance XPrompt RunOrRaisePrompt where
+    showXPrompt RRP = "Run or Raise: "
+
+runOrRaisePrompt :: XPConfig -> X ()
+runOrRaisePrompt c = do wm <- windowMapWith id
+                        mkXPrompt RRP c (compList wm) action
+    where action x = uncurry runOrRaise . head . filter ((==) x . fst) $ choices
+          compList m s = return . filter (isPrefixOf s) . map fst $ choices
+          choices = [ ("firefox", (className =? "Firefox-bin"))
+                    , ("emacs", (className =? "Emacs"))
+                    , ("pidgin", (className =? "Pidgin"))
+                    , ("thunderbird", (className =? "Thunderbird-bin"))
+                    ]
