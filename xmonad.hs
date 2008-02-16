@@ -13,8 +13,7 @@ import XMonad.Prompt
 import XMonad.Prompt.Shell
 
 import XMonad.Actions.WindowGo
-import XMonad.Actions.WindowBringer
-import Data.List
+import Data.Maybe
 
 import qualified Data.Map as M
 import Data.Bits ((.|.))
@@ -32,12 +31,16 @@ bogConfig = defaultConfig
             , XMonad.layoutHook    = layoutHook
             }
 
-modMask = mod4Mask
+modMask = mod4Mask -- Super
 
 keys = M.fromList $
-       [ ((modMask,               xK_p), shellPrompt xpConfig)
-       , ((modMask .|. shiftMask, xK_p), runOrRaisePrompt xpConfig)
+       [ ((modMask,               xK_p), runOrRaisePrompt xpConfig)
+       , ((modMask .|. shiftMask, xK_p), shellPrompt xpConfig)
        , ((modMask,               xK_b), sendMessage ToggleStruts)
+       -- alt-tab, for when others use my computer
+       , ((mod1Mask,              xK_Tab), windows W.focusDown)
+       -- since we have alt-tab, super-tab might as well cycle backwards
+       , ((modMask,               xK_Tab), windows W.focusUp)
        ]
 
 mouse (XConfig {XMonad.modMask = modMask}) = M.fromList $
@@ -52,7 +55,7 @@ mouse (XConfig {XMonad.modMask = modMask}) = M.fromList $
 withFloat f w = gets windowset >>= \ws -> if (isFloat w ws)
                                           then f w
                                           else return ()
-    where isFloat w ws = M.member w $ W.floating ws
+isFloat w ws = M.member w $ W.floating ws
 
 -- TODO: if we can determine what window is at a given x y coord, then
 {-
@@ -75,14 +78,16 @@ xpConfig = defaultXPConfig
            }
 
 manageHook = composeAll
-             [ className =? "Emacs"           --> doF (W.shift "dev")
-             , className =? "Firefox-bin"     --> doF (W.shift "web" . W.swapUp)
-             , className =? "Pidgin"          --> doF (W.shift "com")
-             , className =? "Thunderbird-bin" --> doF (W.shift "com")
+             [ className =? "Emacs"           --> doF (shiftView "dev")
+             , className =? "Firefox-bin"     --> doF (shiftView "web" . W.swapUp)
+             , className =? "Pidgin"          --> doF (shiftView "com")
+             , className =? "Thunderbird-bin" --> doF (shiftView "com")
              , resource  =? "xdvi"            --> doF W.swapUp
              , resource  =? "gv"            --> doF W.swapUp
              , manageDocks
              ] <+> doF W.swapDown
+
+shiftView w = W.greedyView w . W.shift w
 
 workspaces = ["web", "dev", "com" ] ++ map show [4..9]
 
@@ -101,10 +106,10 @@ instance XPrompt RunOrRaisePrompt where
     showXPrompt RRP = "Run or Raise: "
 
 runOrRaisePrompt :: XPConfig -> X ()
-runOrRaisePrompt c = do wm <- windowMapWith id
-                        mkXPrompt RRP c (compList wm) action
-    where action x = uncurry runOrRaise . head . filter ((==) x . fst) $ choices
-          compList m s = return . filter (isPrefixOf s) . map fst $ choices
+runOrRaisePrompt c = do cmds <- io $ getCommands
+                        mkXPrompt RRP c (getShellCompl cmds) action
+    where action = uncurry runOrRaise . getTarget
+          getTarget x = (,) x . fromMaybe (Query $ return False) . lookup x $ choices
           choices = [ ("firefox", (className =? "Firefox-bin"))
                     , ("emacs", (className =? "Emacs"))
                     , ("pidgin", (className =? "Pidgin"))
