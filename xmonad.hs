@@ -13,7 +13,9 @@ import XMonad.Prompt
 import XMonad.Prompt.Shell
 
 import XMonad.Actions.WindowGo
+import XMonad.Util.Run
 import Data.Maybe
+import Control.Monad
 
 import qualified Data.Map as M
 import Data.Bits ((.|.))
@@ -79,11 +81,10 @@ xpConfig = defaultXPConfig
 
 manageHook = composeAll
              [ className =? "Emacs"           --> doF (shiftView "dev")
-             , className =? "Firefox-bin"     --> doF (shiftView "web" . W.swapUp)
+             , className =? "Firefox-bin"     --> doF (shiftView "web")
              , className =? "Pidgin"          --> doF (shiftView "com")
              , className =? "Thunderbird-bin" --> doF (shiftView "com")
-             , resource  =? "xdvi"            --> doF W.swapUp
-             , resource  =? "gv"            --> doF W.swapUp
+             , (ask >>= \w -> liftX $ withWindowSet $ \ws -> return $ isFloat w ws) --> doF W.swapUp
              , manageDocks
              ] <+> doF W.swapDown
 
@@ -109,9 +110,20 @@ runOrRaisePrompt :: XPConfig -> X ()
 runOrRaisePrompt c = do cmds <- io $ getCommands
                         mkXPrompt RRP c (getShellCompl cmds) action
     where action = uncurry runOrRaise . getTarget
-          getTarget x = (,) x . fromMaybe (Query $ return False) . lookup x $ choices
-          choices = [ ("firefox", (className =? "Firefox-bin"))
-                    , ("emacs", (className =? "Emacs"))
-                    , ("pidgin", (className =? "Pidgin"))
-                    , ("thunderbird", (className =? "Thunderbird-bin"))
-                    ]
+          getTarget x = (x,isApp x)
+
+isApp :: String -> Query Bool
+isApp "firefox" = className =? "Firefox-bin"
+isApp "thunderbird" = className =? "Thunderbird-bin"
+isApp x = liftM2 (==) pid $ pidof x
+
+pidof :: String -> Query Int
+pidof x = io $ (runProcessWithInput "pidof" [x] [] >>= readIO) `catch` (\e -> return $ 0)
+
+pid :: Query Int
+pid = ask >>= (\w -> liftX $ withDisplay $ \d -> getPID d w)
+    where getPID d w = getAtom "_NET_WM_PID" >>= \a -> io $
+                       getWindowProperty32 d a w >>= return . getPID'
+          getPID' (Just (x:xs)) = fromIntegral x
+          getPID' (Just [])     = -1
+          getPID' (Nothing)     = -1
