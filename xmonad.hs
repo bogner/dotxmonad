@@ -12,10 +12,11 @@ import XMonad.Layout.NoBorders
 import XMonad.Prompt
 import XMonad.Prompt.Shell
 
-import XMonad.Actions.WindowGo
-import XMonad.Util.Run
+import XMonad.Actions.WindowGo (runOrRaise)
+import XMonad.Util.Run (runProcessWithInput)
 import Data.Maybe
-import Control.Monad
+import Control.Monad (liftM2)
+import System.Directory (executable, getPermissions)
 
 import qualified Data.Map as M
 import Data.Bits ((.|.))
@@ -85,7 +86,7 @@ manageHook = composeAll
              , className =? "Pidgin"          --> doF (shiftView "com")
              , className =? "Thunderbird-bin" --> doF (shiftView "com")
              , resource  =? "xdvi"            --> doF W.swapUp
-             , resource  =? "gv"            --> doF W.swapUp
+             , resource  =? "gv"              --> doF W.swapUp
              , manageDocks
              ] <+> doF W.swapDown
 
@@ -109,9 +110,14 @@ instance XPrompt RunOrRaisePrompt where
 
 runOrRaisePrompt :: XPConfig -> X ()
 runOrRaisePrompt c = do cmds <- io $ getCommands
-                        mkXPrompt RRP c (getShellCompl cmds) action
-    where action = uncurry runOrRaise . getTarget
-          getTarget x = (x,isApp x)
+                        mkXPrompt RRP c (getShellCompl cmds) open
+open :: String -> X ()
+open path = (io $ isExecutable path) >>= \b -> if b
+                                               then uncurry runOrRaise . getTarget $ path
+                                               else spawn $ "xdg-open " ++ path
+    where
+      isExecutable = fmap executable . getPermissions
+      getTarget x = (x,isApp x)
 
 isApp :: String -> Query Bool
 isApp "firefox" = className =? "Firefox-bin"
