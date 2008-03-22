@@ -11,12 +11,7 @@ import XMonad.Layout.Grid
 import XMonad.Layout.NoBorders
 import XMonad.Prompt
 import XMonad.Prompt.Shell
-
-import XMonad.Actions.WindowGo (runOrRaise)
-import XMonad.Util.Run (runProcessWithInput)
-import Data.Maybe
-import Control.Monad (liftM2)
-import System.Directory (executable, getPermissions)
+import XMonad.Prompt.RunOrRaise
 
 import qualified Data.Map as M
 import Data.Bits ((.|.))
@@ -103,34 +98,3 @@ layoutHook =
           bigTiled = Tall nmaster delta (11/16)
           nmaster  = 1
           delta    = 3/100
-
-data RunOrRaisePrompt = RRP
-instance XPrompt RunOrRaisePrompt where
-    showXPrompt RRP = "Run or Raise: "
-
-runOrRaisePrompt :: XPConfig -> X ()
-runOrRaisePrompt c = do cmds <- io $ getCommands
-                        mkXPrompt RRP c (getShellCompl cmds) open
-open :: String -> X ()
-open path = (io $ isExecutable path) >>= \b -> if b
-                                               then uncurry runOrRaise . getTarget $ path
-                                               else spawn $ "xdg-open " ++ path
-    where
-      isExecutable = fmap executable . getPermissions
-      getTarget x = (x,isApp x)
-
-isApp :: String -> Query Bool
-isApp "firefox" = className =? "Firefox-bin"
-isApp "thunderbird" = className =? "Thunderbird-bin"
-isApp x = liftM2 (==) pid $ pidof x
-
-pidof :: String -> Query Int
-pidof x = io $ (runProcessWithInput "pidof" [x] [] >>= readIO) `catch` (\e -> return $ 0)
-
-pid :: Query Int
-pid = ask >>= (\w -> liftX $ withDisplay $ \d -> getPID d w)
-    where getPID d w = getAtom "_NET_WM_PID" >>= \a -> io $
-                       getWindowProperty32 d a w >>= return . getPID'
-          getPID' (Just (x:xs)) = fromIntegral x
-          getPID' (Just [])     = -1
-          getPID' (Nothing)     = -1
