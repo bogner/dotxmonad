@@ -27,7 +27,7 @@ import XMonad.Util.Run (runProcessWithInput)
 
 import Control.Monad (liftM2)
 import Data.Maybe
-import System.Directory (executable, getPermissions)
+import System.Directory (doesDirectoryExist, doesFileExist, executable, getPermissions)
 
 -- $usage
 -- 1. In your @~\/.xmonad\/xmonad.hs@:
@@ -50,11 +50,14 @@ runOrRaisePrompt :: XPConfig -> X ()
 runOrRaisePrompt c = do cmds <- io $ getCommands
                         mkXPrompt RRP c (getShellCompl cmds) open
 open :: String -> X ()
-open path = (io $ isExecutable path) >>= \b -> if b
-                                               then uncurry runOrRaise . getTarget $ path
-                                               else spawn $ "xdg-open \"" ++ path ++ "\""
+open path = (io $ isNormalFile path) >>= \b ->
+            if b
+            then spawn $ "xdg-open \"" ++ path ++ "\""
+            else uncurry runOrRaise . getTarget $ path
     where
-      isExecutable = fmap executable . getPermissions
+      isNormalFile f = exists f >>= \e -> if e then (notExecutable f) else return False
+      exists f = fmap or $ sequence [doesFileExist f,doesDirectoryExist f]
+      notExecutable = fmap (not . executable) . getPermissions
       getTarget x = (x,isApp x)
 
 isApp :: String -> Query Bool
