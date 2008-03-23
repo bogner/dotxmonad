@@ -95,9 +95,9 @@ shiftView w = W.greedyView w . W.shift w
 workspaces = ["web", "dev", "com" ] ++ map show [4..9]
 
 layoutHook =
-    ewmhDesktopsLayout $ avoidStruts $
+    ewmhDesktopsLayout $ avoidStruts $ smartBorders $
     tiled ||| bigTiled ||| Mirror tiled
-              ||| Mirror Grid ||| noBorders Full
+              ||| Mirror Grid ||| Full
         where
           tiled    = Tall nmaster delta (1/2)
           bigTiled = Tall nmaster delta (11/16)
