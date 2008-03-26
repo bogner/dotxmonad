@@ -91,8 +91,7 @@ workspaces = ["web", "dev", "com" ] ++ map show [4..9]
 
 layoutHook =
     ewmhDesktopsLayout $ avoidStruts $ smartBorders $
-    tiled ||| bigTiled ||| Mirror tiled
-              ||| Mirror Grid ||| Full
+    tiled ||| bigTiled ||| Mirror tiled ||| Mirror Grid ||| Full
         where
           tiled    = Tall nmaster delta (1/2)
           bigTiled = Tall nmaster delta (11/16)
