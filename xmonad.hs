@@ -11,8 +11,10 @@ import XMonad.Prompt
 import XMonad.Prompt.Shell
 import XMonad.Prompt.RunOrRaise
 
+import Control.Applicative ((<$>))
 import Control.Monad (filterM,liftM)
 import Data.Bits ((.|.))
+import Data.Maybe (isJust)
 import qualified Data.Map as M
 
 main = xmonad bogConfig
@@ -79,9 +81,17 @@ manageHook = composeAll
              , className =? "Firefox"         --> doF (shiftView "web")
              , className =? "Pidgin"          --> doF (shiftView "com")
              , className =? "Thunderbird-bin" --> doF (shiftView "com")
-             , (ask >>= \w -> liftX $ withWindowSet $ \ws -> return $ isFloat w ws) --> doF W.swapUp
+             , (ask >>= liftX . willFloat)    --> doF W.swapUp
              , manageDocks
              ] <+> doF W.swapDown
+
+-- This is logic copied from XMonad.Operations.manage, since we need to 
+willFloat w = withDisplay $ \d -> 
+              withWindowSet $ \ws -> do
+                sh <- io $ getWMNormalHints d w
+                let isFixedSize = sh_min_size sh /= Nothing && sh_min_size sh == sh_max_size sh
+                isTransient <- isJust <$> io (getTransientForHint d w)
+                return (isFixedSize || isTransient || isFloat w ws)
 
 shiftView w = W.greedyView w . W.shift w
 
