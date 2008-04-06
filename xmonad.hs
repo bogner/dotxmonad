@@ -1,20 +1,19 @@
-import XMonad hiding
-    (workspaces,manageHook,numlockMask,keys,logHook,borderWidth,mouseBindings
-    ,defaultGaps,layoutHook,modMask,terminal,normalBorderColor,focusedBorderColor)
-import qualified XMonad
-    (workspaces,manageHook,numlockMask,keys,logHook,borderWidth,mouseBindings
-    ,defaultGaps,layoutHook,modMask,terminal,normalBorderColor,focusedBorderColor)
+{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, TypeSynonymInstances #-}
+import XMonad hiding (keys,layoutHook,manageHook,modMask,workspaces)
+import qualified XMonad (keys,layoutHook,manageHook,modMask,workspaces)
 import qualified XMonad.StackSet as W
-import XMonad.Hooks.EwmhDesktops
-import XMonad.Hooks.ManageDocks
-import XMonad.Layout.Grid
-import XMonad.Layout.NoBorders
+
+import XMonad.Hooks.EwmhDesktops (ewmhDesktopsLayout,ewmhDesktopsLogHook)
+import XMonad.Hooks.ManageDocks (avoidStruts,manageDocks,ToggleStruts(..))
+import XMonad.Layout.Grid (Grid(..))
+import XMonad.Layout.NoBorders (smartBorders)
 import XMonad.Prompt
 import XMonad.Prompt.Shell
 import XMonad.Prompt.RunOrRaise
 
-import qualified Data.Map as M
+import Control.Monad (filterM,liftM)
 import Data.Bits ((.|.))
+import qualified Data.Map as M
 
 main = xmonad bogConfig
 
@@ -76,8 +75,8 @@ xpConfig = defaultXPConfig
            }
 
 manageHook = composeAll
-             [ className =? "Emacs"           --> doF (shiftView "dev")
-             , className =? "Firefox-bin"     --> doF (shiftView "web")
+             [ className =? "Emacs"           --> doF (shiftView "dev" . W.swapMaster)
+             , className =? "Firefox"         --> doF (shiftView "web")
              , className =? "Pidgin"          --> doF (shiftView "com")
              , className =? "Thunderbird-bin" --> doF (shiftView "com")
              , (ask >>= \w -> liftX $ withWindowSet $ \ws -> return $ isFloat w ws) --> doF W.swapUp
@@ -90,9 +89,32 @@ workspaces = ["web", "dev", "com" ] ++ map show [4..9]
 
 layoutHook =
     ewmhDesktopsLayout $ avoidStruts $ smartBorders $
-    tiled ||| bigTiled ||| Mirror tiled ||| Mirror Grid ||| Full
+    tiled ||| bigTiled ||| Mirror tiled ||| PerRow ||| Full
         where
           tiled    = Tall nmaster delta (1/2)
           bigTiled = Tall nmaster delta (11/16)
           nmaster  = 1
           delta    = 3/100
+
+data PerRow a = PerRow deriving (Read, Show)
+
+instance LayoutClass PerRow Window where
+    doLayout PerRow r s = splitByClass (W.integrate s) >>=
+                          \ws -> return ((arrange r ws),Nothing)
+    description _ = "PerRow"
+
+splitByClass :: [Window] -> X [[Window]]
+splitByClass [] = return []
+splitByClass (w:ws) = filterM (sameClass w) ws >>=
+                      \x -> filterM (liftM not . sameClass w) ws >>=
+                      \xs -> splitByClass xs >>=
+                      \r -> return ((w:x):r)
+    where
+      sameClass w1 w2 = flip runQuery w1 $ getClass w1 >>= \q -> getClass w2 =? q
+      getClass w = liftX $ withDisplay $ \d -> fmap resClass $ io $ getClassHint d w
+
+arrange :: Eq a => Rectangle -> [[a]] -> [(a, Rectangle)]
+arrange r ws = concat $ zipWith place (splitVertically (length ws) r) ws
+
+place :: Rectangle -> [a] -> [(a, Rectangle)]
+place r ws = zip ws $ splitHorizontally (length ws) r
