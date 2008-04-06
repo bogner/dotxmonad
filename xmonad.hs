@@ -70,8 +70,8 @@ xpConfig = defaultXPConfig
            { font        = "xft:Bitstream Vera Sans Mono:pixelsize=10"
            , bgColor     = "#3f3f3f"
            , fgColor     = "#dcdccc"
-           , fgHLight    = "#94bff3"
---           , bgHLight    = "#dcdccc"
+           , fgHLight    = "#3f3f3f"
+           , bgHLight    = "#dcdccc"
            , borderColor = "#dcdccc"
            , position    = Top
            }
@@ -81,16 +81,22 @@ manageHook = composeAll
              , className =? "Firefox"         --> doF (shiftView "web")
              , className =? "Pidgin"          --> doF (shiftView "com")
              , className =? "Thunderbird-bin" --> doF (shiftView "com")
-             , (ask >>= liftX . willFloat)    --> doF W.swapUp
+             -- floats need swapUp, otherwise they show up below other floats
+             , floating                       --> doF W.swapUp
              , manageDocks
              ] <+> doF W.swapDown
+    where
+      floating = (ask >>= liftX . willFloat)
+                 -- if we apply swapUp to the desktop, things move around on restart
+                 <&&> (liftM not $ resource  =? "desktop_window")
 
--- This is logic copied from XMonad.Operations.manage, since we need to 
-willFloat w = withDisplay $ \d -> 
-              withWindowSet $ \ws -> do
+{- This is logic copied from XMonad.Operations.manage,
+   since manageHook is called before windows are floated -}
+willFloat w = withDisplay $ \d -> do
                 sh <- io $ getWMNormalHints d w
                 let isFixedSize = sh_min_size sh /= Nothing && sh_min_size sh == sh_max_size sh
                 isTransient <- isJust <$> io (getTransientForHint d w)
+                ws <- gets windowset
                 return (isFixedSize || isTransient || isFloat w ws)
 
 shiftView w = W.greedyView w . W.shift w
@@ -109,22 +115,29 @@ layoutHook =
 data PerRow a = PerRow deriving (Read, Show)
 
 instance LayoutClass PerRow Window where
-    doLayout PerRow r s = splitByClass (W.integrate s) >>=
+    doLayout PerRow r s = groupByM sameClass (W.integrate s) >>=
                           \ws -> return ((arrange r ws),Nothing)
     description _ = "PerRow"
 
-splitByClass :: [Window] -> X [[Window]]
-splitByClass [] = return []
-splitByClass (w:ws) = filterM (sameClass w) ws >>=
-                      \x -> filterM (liftM not . sameClass w) ws >>=
-                      \xs -> splitByClass xs >>=
-                      \r -> return ((w:x):r)
-    where
-      sameClass w1 w2 = flip runQuery w1 $ getClass w1 >>= \q -> getClass w2 =? q
-      getClass w = liftX $ withDisplay $ \d -> fmap resClass $ io $ getClassHint d w
+-- span and groupBy lifted to monads, thanks to Cale on #haskell
+spanM             :: Monad m => (a -> m Bool) -> [a] -> m ([a],[a])
+spanM p []         = return ([],[])
+spanM p xs@(x:xs') = do v <- p x
+                        if v then do (ys,zs) <- spanM p xs'
+                                     return (x:ys,zs)
+                             else return ([], xs)
 
-arrange :: Eq a => Rectangle -> [[a]] -> [(a, Rectangle)]
+groupByM           :: Monad m => (a -> a -> m Bool) -> [a] -> m [[a]]
+groupByM eq []     = return []
+groupByM eq (x:xs) = do (ys,zs) <- spanM (eq x) xs 
+                        gs <- groupByM eq zs
+                        return ((x:ys) : gs) 
+
+sameClass w1 w2 = flip runQuery w1 $ getClass w1 >>= \q -> getClass w2 =? q
+getClass w = liftX $ withDisplay $ \d -> fmap resClass $ io $ getClassHint d w
+
+arrange      :: Eq a => Rectangle -> [[a]] -> [(a, Rectangle)]
 arrange r ws = concat $ zipWith place (splitVertically (length ws) r) ws
 
-place :: Rectangle -> [a] -> [(a, Rectangle)]
+place      :: Rectangle -> [a] -> [(a, Rectangle)]
 place r ws = zip ws $ splitHorizontally (length ws) r
