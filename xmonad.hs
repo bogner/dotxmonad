@@ -1,20 +1,18 @@
-import XMonad hiding
-    (workspaces,manageHook,numlockMask,keys,logHook,borderWidth,mouseBindings
-    ,defaultGaps,layoutHook,modMask,terminal,normalBorderColor,focusedBorderColor)
-import qualified XMonad
-    (workspaces,manageHook,numlockMask,keys,logHook,borderWidth,mouseBindings
-    ,defaultGaps,layoutHook,modMask,terminal,normalBorderColor,focusedBorderColor)
+{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, TypeSynonymInstances #-}
+import XMonad hiding (keys,layoutHook,manageHook,modMask,workspaces)
+import qualified XMonad (keys,layoutHook,manageHook,modMask,workspaces)
 import qualified XMonad.StackSet as W
-import XMonad.Hooks.EwmhDesktops
-import XMonad.Hooks.ManageDocks
-import XMonad.Layout.Grid
-import XMonad.Layout.NoBorders
+
+import XMonad.Hooks.EwmhDesktops (ewmhDesktopsLayout,ewmhDesktopsLogHook)
+import XMonad.Hooks.ManageDocks (avoidStruts,manageDocks,ToggleStruts(..))
+import XMonad.Layout.Grid (Grid(..))
+import XMonad.Layout.NoBorders (smartBorders)
 import XMonad.Prompt
 import XMonad.Prompt.Shell
 import XMonad.Prompt.RunOrRaise
 
-import qualified Data.Map as M
 import Data.Bits ((.|.))
+import qualified Data.Map as M
 
 main = xmonad bogConfig
 
@@ -76,8 +74,8 @@ xpConfig = defaultXPConfig
            }
 
 manageHook = composeAll
-             [ className =? "Emacs"           --> doF (shiftView "dev")
-             , className =? "Firefox-bin"     --> doF (shiftView "web" . W.swapUp)
+             [ className =? "Emacs"           --> doF (shiftView "dev" . W.swapMaster)
+             , className =? "Firefox"         --> doF (shiftView "web" . W.swapUp)
              , className =? "Pidgin"          --> doF (shiftView "com")
              , className =? "Thunderbird-bin" --> doF (shiftView "com")
              , resource  =? "xdvi"            --> doF W.swapUp
