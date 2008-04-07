@@ -20,14 +20,16 @@ import qualified Data.Map as M
 main = xmonad bogConfig
 
 bogConfig = defaultConfig
-            { XMonad.keys          = \c -> keys `M.union` XMonad.keys defaultConfig c
-            , XMonad.mouseBindings = mouse
-            , XMonad.logHook       = ewmhDesktopsLogHook
-            , XMonad.manageHook    = manageHook
-            , XMonad.modMask       = modMask
-            , XMonad.terminal      = "urxvtcd"
-            , XMonad.workspaces    = workspaces
-            , XMonad.layoutHook    = layoutHook
+            { XMonad.focusedBorderColor = "#5c888b"
+            , XMonad.keys               = \c -> keys `M.union` XMonad.keys defaultConfig c
+            , XMonad.layoutHook         = layoutHook
+            , XMonad.logHook            = ewmhDesktopsLogHook
+            , XMonad.manageHook         = manageHook
+            , XMonad.modMask            = modMask
+            , XMonad.mouseBindings      = mouse
+            , XMonad.normalBorderColor  = "#dcdccc"
+            , XMonad.terminal           = "urxvtcd"
+            , XMonad.workspaces         = workspaces
             }
 
 modMask = mod4Mask -- Super
