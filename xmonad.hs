@@ -85,6 +85,9 @@ manageHook = composeAll
              , className =? "Thunderbird-bin" --> doF (shiftView "com")
              -- floats need swapUp, otherwise they show up below other floats
              , floating                       --> doF W.swapUp
+             -- i like these to show up in the master area when using emacs
+             , className =? "XDvi"            --> doF W.swapUp
+             , className =? "gv"              --> doF W.swapUp
              , manageDocks
              ] <+> doF W.swapDown
     where
