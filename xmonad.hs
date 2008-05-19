@@ -42,6 +42,7 @@ keys = M.fromList $
        , ((mod1Mask,              xK_Tab), windows W.focusDown)
        -- since we have alt-tab, super-tab might as well cycle backwards
        , ((modMask,               xK_Tab), windows W.focusUp)
+       , ((modMask,               xK_w), kill)
        ]
 
 mouse (XConfig {XMonad.modMask = modMask}) = M.fromList $
@@ -87,7 +88,7 @@ manageHook = composeAll
              , floating                       --> doF W.swapUp
              -- i like these to show up in the master area when using emacs
              , className =? "XDvi"            --> doF W.swapUp
-             , className =? "gv"              --> doF W.swapUp
+             , className =? "GV"              --> doF W.swapUp
              , manageDocks
              ] <+> doF W.swapDown
     where
@@ -106,11 +107,11 @@ willFloat w = withDisplay $ \d -> do
 
 shiftView w = W.greedyView w . W.shift w
 
-workspaces = ["web", "dev", "com" ] ++ map show [4..9]
+workspaces = ["web", "dev", "com"] ++ map show [4..9]
 
 layoutHook =
     ewmhDesktopsLayout $ avoidStruts $ smartBorders $
-    tiled ||| bigTiled ||| Mirror tiled ||| PerRow ||| Full
+    tiled ||| bigTiled ||| PerRow ||| Full
         where
           tiled    = Tall nmaster delta (1/2)
           bigTiled = Tall nmaster delta (11/16)
