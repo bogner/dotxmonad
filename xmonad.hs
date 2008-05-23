@@ -10,6 +10,7 @@ import XMonad.Layout.NoBorders (smartBorders)
 import XMonad.Prompt
 import XMonad.Prompt.Shell
 import XMonad.Prompt.RunOrRaise
+import XMonad.Util.Run (runProcessWithInput)
 
 import Control.Applicative ((<$>))
 import Control.Monad (filterM,liftM)
@@ -42,6 +43,8 @@ keys = M.fromList $
        , ((mod1Mask,              xK_Tab), windows W.focusDown)
        -- since we have alt-tab, super-tab might as well cycle backwards
        , ((modMask,               xK_Tab), windows W.focusUp)
+       , ((modMask,               xK_w), kill)
+       , ((modMask .|. shiftMask, xK_slash), spawn "todo-notify.sh")
        ]
 
 mouse (XConfig {XMonad.modMask = modMask}) = M.fromList $
@@ -79,12 +82,12 @@ xpConfig = defaultXPConfig
            }
 
 manageHook = composeAll
-             [ className =? "Emacs"           --> doF (shiftView "dev" . W.swapMaster)
-             , className =? "Firefox"         --> doF (shiftView "web")
+             [ className =? "Emacs"           --> doF (shiftView "dev" . insertMaster)
+             , resource  =? "Navigator"       --> doF (shiftView "web")
              , className =? "Pidgin"          --> doF (shiftView "com")
              , className =? "Thunderbird-bin" --> doF (shiftView "com")
-             -- floats need swapUp, otherwise they show up below other floats
-             , floating                       --> doF W.swapUp
+             -- floats should always appear at the very top
+             , floating                       --> doF insertMaster
              -- i like these to show up in the master area when using emacs
              , className =? "XDvi"            --> doF W.swapUp
              , className =? "gv"              --> doF W.swapUp
@@ -106,7 +109,12 @@ willFloat w = withDisplay $ \d -> do
 
 shiftView w = W.greedyView w . W.shift w
 
-workspaces = ["web", "dev", "com" ] ++ map show [4..9]
+insertMaster :: W.StackSet i l a s sd -> W.StackSet i l a s sd
+insertMaster = W.modify' $ \c -> case c of
+    W.Stack _ [] _  -> c    -- already master.
+    W.Stack t ls rs -> W.Stack t [] (reverse ls ++ rs)
+
+workspaces = ["web", "dev", "com"] ++ map show [4..9]
 
 layoutHook =
     ewmhDesktopsLayout $ avoidStruts $ smartBorders $
