@@ -117,8 +117,10 @@ insertMaster = W.modify' $ \c -> case c of
 workspaces = ["web", "dev", "com"] ++ map show [4..9]
 
 layoutHook =
-    ewmhDesktopsLayout $ avoidStruts $ smartBorders $
-    tiled ||| bigTiled ||| Mirror tiled ||| PerRow ||| Full
+    smartBorders $
+    layoutHints $
+    ewmhDesktopsLayout $ avoidStruts $
+    tiled ||| bigTiled ||| PerRow ||| Full
         where
           tiled    = Tall nmaster delta (1/2)
           bigTiled = Tall nmaster delta (11/16)
