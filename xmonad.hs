@@ -4,6 +4,7 @@ import qualified XMonad (keys,layoutHook,manageHook,modMask,workspaces)
 import qualified XMonad.StackSet as W
 
 import XMonad.Hooks.EwmhDesktops (ewmhDesktopsLayout,ewmhDesktopsLogHook)
+import XMonad.Hooks.FadeInactive (fadeInactiveLogHook)
 import XMonad.Hooks.ManageDocks (avoidStruts,manageDocks,ToggleStruts(..))
 import XMonad.Layout.Grid (Grid(..))
 import XMonad.Layout.LayoutHints (layoutHints)
@@ -25,7 +26,7 @@ bogConfig = defaultConfig
             { XMonad.focusedBorderColor = "#5c888b"
             , XMonad.keys               = \c -> keys `M.union` XMonad.keys defaultConfig c
             , XMonad.layoutHook         = layoutHook
-            , XMonad.logHook            = ewmhDesktopsLogHook
+            , XMonad.logHook            = ewmhDesktopsLogHook >> fadeInactiveLogHook 0xdddddddd
             , XMonad.manageHook         = manageHook
             , XMonad.modMask            = modMask
             , XMonad.mouseBindings      = mouse
