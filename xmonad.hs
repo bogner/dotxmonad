@@ -6,6 +6,7 @@ import qualified XMonad.StackSet as W
 import XMonad.Hooks.EwmhDesktops (ewmhDesktopsLayout,ewmhDesktopsLogHook)
 import XMonad.Hooks.ManageDocks (avoidStruts,manageDocks,ToggleStruts(..))
 import XMonad.Layout.Grid (Grid(..))
+import XMonad.Layout.LayoutHints (layoutHints)
 import XMonad.Layout.NoBorders (smartBorders)
 import XMonad.Prompt
 import XMonad.Prompt.Shell
