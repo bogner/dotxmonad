@@ -92,7 +92,7 @@ manageHook = composeAll
              , floating                       --> doF insertMaster
              -- i like these to show up in the master area when using emacs
              , className =? "XDvi"            --> doF W.swapUp
-             , className =? "gv"              --> doF W.swapUp
+             , className =? "GV"              --> doF W.swapUp
              , manageDocks
              ] <+> doF W.swapDown
     where
