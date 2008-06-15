@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, TypeSynonymInstances #-}
-import XMonad hiding (keys,layoutHook,manageHook,modMask,workspaces)
-import qualified XMonad (keys,layoutHook,manageHook,modMask,workspaces)
+import XMonad hiding (keys,layoutHook,manageHook,modMask,startupHook,workspaces)
+import qualified XMonad (keys,layoutHook,manageHook,modMask,startupHook,workspaces)
 import qualified XMonad.StackSet as W
 
 import XMonad.Hooks.EwmhDesktops (ewmhDesktopsLayout,ewmhDesktopsLogHook)
@@ -31,6 +31,7 @@ bogConfig = defaultConfig
             , XMonad.modMask            = modMask
             , XMonad.mouseBindings      = mouse
             , XMonad.normalBorderColor  = "#dcdccc"
+            , XMonad.startupHook        = startupHook
             , XMonad.terminal           = "urxvtcd"
             , XMonad.workspaces         = workspaces
             }
@@ -129,6 +130,27 @@ layoutHook =
           bigTiled = Tall nmaster delta (11/16)
           nmaster  = 1
           delta    = 3/100
+
+----------------------------------------------------------------------
+-- We set initial layouts on our workspaces. Perhaps we should use
+-- LayoutCombinators to clean this up, but this gets the job done.
+----------------------------------------------------------------------
+
+startupHook = sequence_ $ zipWith workspaceLayout workspaces [ 3, 0, 2 ]
+
+-- Set the layout on a workspace
+workspaceLayout :: String -> Int -> X ()
+workspaceLayout w l = do
+  c <- W.tag . W.workspace . W.current <$> gets windowset
+  windows (W.greedyView w)
+  sendMessage' FirstLayout
+  sequence_ . take l . repeat $ sendMessage' NextLayout
+  windows (W.greedyView c)
+
+-- like sendMessageWithNoRefresh but with sendMessage's type
+sendMessage' :: Message a => a -> X ()
+sendMessage' m = W.workspace . W.current <$> gets windowset >>=
+                 sendMessageWithNoRefresh m
 
 ----------------------------------------------------------------------
 -- PerRow, A layout which gives each independent application it's own
