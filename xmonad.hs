@@ -26,7 +26,7 @@ bogConfig = defaultConfig
             { XMonad.focusedBorderColor = "#5c888b"
             , XMonad.keys               = \c -> keys `M.union` XMonad.keys defaultConfig c
             , XMonad.layoutHook         = layoutHook
-            , XMonad.logHook            = ewmhDesktopsLogHook >> fadeInactiveLogHook 0xeeee0000
+            , XMonad.logHook            = ewmhDesktopsLogHook >> fadeInactiveLogHook 0xe0000000
             , XMonad.manageHook         = manageHook
             , XMonad.modMask            = modMask
             , XMonad.mouseBindings      = mouse
@@ -93,6 +93,7 @@ manageHook = composeAll
              -- i like these to show up in the master area when using emacs
              , className =? "XDvi"            --> doF W.swapUp
              , className =? "GV"              --> doF W.swapUp
+             , className =? "feh"             --> doFloat
              , manageDocks
              ] <+> doF W.swapDown
     where
@@ -146,9 +147,9 @@ spanM p xs@(x:xs') = do v <- p x
 
 groupByM           :: Monad m => (a -> a -> m Bool) -> [a] -> m [[a]]
 groupByM eq []     = return []
-groupByM eq (x:xs) = do (ys,zs) <- spanM (eq x) xs 
+groupByM eq (x:xs) = do (ys,zs) <- spanM (eq x) xs
                         gs <- groupByM eq zs
-                        return ((x:ys) : gs) 
+                        return ((x:ys) : gs)
 
 sameClass w1 w2 = flip runQuery w1 $ getClass w1 >>= \q -> getClass w2 =? q
 getClass w = liftX $ withDisplay $ \d -> fmap resClass $ io $ getClassHint d w
