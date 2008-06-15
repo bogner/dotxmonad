@@ -99,8 +99,11 @@ manageHook = composeAll
              ] <+> doF W.swapDown
     where
       floating = (ask >>= liftX . willFloat)
-                 -- if we apply swapUp to the desktop, things move around on restart
-                 <&&> (liftM not $ resource  =? "desktop_window")
+                 -- if we apply swapUp to the desktop, things move
+                 -- around on restart, similarly for looking at
+                 -- gnome-panel's calendar
+                 <&&> (liftM not $ resource =? "desktop_window"
+                       <||> resource =? "gnome-panel")
 
 {- This is logic copied from XMonad.Operations.manage,
    since manageHook is called before windows are floated -}
