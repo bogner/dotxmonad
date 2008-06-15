@@ -130,6 +130,15 @@ layoutHook =
           nmaster  = 1
           delta    = 3/100
 
+----------------------------------------------------------------------
+-- PerRow, A layout which gives each independent application it's own
+-- row of windows. This only groups consecutive windows of an
+-- application, so that changing the order of windows always has an
+-- effect. It might be better to group them no matter what order they
+-- come in, but I haven't worked out a way to do that that doesn't
+-- result in very awkward behaviour.
+----------------------------------------------------------------------
+
 data PerRow a = PerRow deriving (Read, Show)
 
 instance LayoutClass PerRow Window where
