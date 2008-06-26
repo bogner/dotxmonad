@@ -127,7 +127,7 @@ layoutHook =
     smartBorders $
     layoutHints $
     ewmhDesktopsLayout $ avoidStruts $
-    tiled ||| bigTiled ||| PerRow ||| Full
+    tiled ||| bigTiled ||| Mirror tiled ||| PerRow ||| Full
         where
           tiled    = Tall nmaster delta (1/2)
           bigTiled = Tall nmaster delta (11/16)
@@ -139,7 +139,7 @@ layoutHook =
 -- LayoutCombinators to clean this up, but this gets the job done.
 ----------------------------------------------------------------------
 
-startupHook = sequence_ $ zipWith workspaceLayout workspaces [ 3, 0, 2 ]
+startupHook = sequence_ $ zipWith workspaceLayout workspaces [ 4, 0, 3 ]
 
 -- Set the layout on a workspace
 workspaceLayout :: String -> Int -> X ()
