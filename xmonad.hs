@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, TypeSynonymInstances #-}
-import XMonad hiding (keys,layoutHook,manageHook,modMask,workspaces)
-import qualified XMonad (keys,layoutHook,manageHook,modMask,workspaces)
+import XMonad hiding (keys,layoutHook,logHook,manageHook,modMask,workspaces)
+import qualified XMonad (keys,layoutHook,logHook,manageHook,modMask,workspaces)
 import qualified XMonad.StackSet as W
 
 import XMonad.Hooks.EwmhDesktops (ewmhDesktopsLayout,ewmhDesktopsLogHook)
@@ -13,6 +13,7 @@ import XMonad.Prompt
 import XMonad.Prompt.Shell
 import XMonad.Prompt.RunOrRaise
 import XMonad.Util.Run (runProcessWithInput)
+import XMonad.Util.WorkspaceCompare (getSortByIndex, WorkspaceSort)
 
 import Control.Applicative ((<$>))
 import Control.Monad (filterM,liftM)
@@ -26,7 +27,7 @@ bogConfig = defaultConfig
             { XMonad.focusedBorderColor = "#5c888b"
             , XMonad.keys               = \c -> keys `M.union` XMonad.keys defaultConfig c
             , XMonad.layoutHook         = layoutHook
-            , XMonad.logHook            = ewmhDesktopsLogHook >> fadeInactiveLogHook 0xe0000000
+            , XMonad.logHook            = logHook
             , XMonad.manageHook         = manageHook
             , XMonad.modMask            = modMask
             , XMonad.mouseBindings      = mouse
@@ -132,6 +133,42 @@ layoutHook =
           bigTiled = Tall nmaster delta (11/16)
           nmaster  = 1
           delta    = 3/100
+
+----------------------------------------------------------------------
+-- Log Hook
+----------------------------------------------------------------------
+
+logHook = ewmhDesktopsLogHook >> fewerDesktops >> fadeInactiveLogHook 0xe0000000
+
+-- redundant code, we actually just want to replace getSortByIndex in ewmhDesktopsLogHook
+
+setNumberOfDesktops :: (Integral a) => a -> X ()
+setNumberOfDesktops n = withDisplay $ \dpy -> do
+    a <- getAtom "_NET_NUMBER_OF_DESKTOPS"
+    c <- getAtom "CARDINAL"
+    r <- asks theRoot
+    io $ changeProperty32 dpy r a c propModeReplace [fromIntegral n]
+
+fewerDesktops :: X ()
+fewerDesktops = withWindowSet $ \s -> do
+                  sort' <- getSortByIndex'
+                  let ws = sort' $ W.workspaces s
+                  setNumberOfDesktops (length ws)
+
+-- End redundant code
+
+-- Sort by index, dropping unused workspaces from the end of the list
+getSortByIndex' :: X WorkspaceSort
+getSortByIndex' = withWindowSet $ \s ->
+                  getSortByIndex >>= \sort ->
+                      return $ dropBoring s . sort
+
+-- Drop empty and inactive workspaces from the end of the list
+dropBoring :: Eq i => W.StackSet i l a s sd -> [W.Workspace i l a] -> [W.Workspace i l a]
+        -- :: WindowSet -> [WindowSpace] -> [WindowSpace]
+dropBoring s = reverse . dropWhile boring . reverse
+    where boring (W.Workspace _ _ (Just _)) = False
+          boring (W.Workspace i _ Nothing)  = i /= W.currentTag s
 
 ----------------------------------------------------------------------
 -- PerRow, A layout which gives each independent application it's own
