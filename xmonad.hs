@@ -17,6 +17,7 @@ import XMonad.Util.WorkspaceCompare (getSortByIndex, WorkspaceSort)
 
 import Control.Applicative ((<$>))
 import Control.Monad (filterM,liftM)
+import Control.Monad.State (when)
 import Data.Bits ((.|.))
 import Data.Maybe (isJust)
 import qualified Data.Map as M
@@ -53,17 +54,27 @@ keys = M.fromList $
 
 mouse (XConfig {XMonad.modMask = modMask}) = M.fromList $
     [ ((modMask .|. shiftMask, button1), (\w -> focus w >> float w))
-    , ((modMask, button1),
-       (\w -> focus w >> withFloat mouseMoveWindow w))
-    , ((modMask, button2), (\w -> focus w >> windows W.swapMaster))
-    , ((modMask .|. controlMask, button1),
-       (\w -> focus w >> withFloat mouseResizeWindow w))
+    , ( (modMask, button1)
+      , (\w -> whenFloat w (focus w >> mouseMoveWindow w
+                                    >> windows insertMaster))
+      )
+    , ( (modMask, button2)
+      , (\w -> focus w >> windows insertMaster)
+      )
+    , ( (modMask .|. controlMask, button1)
+      , (\w -> whenFloat w (focus w >> mouseResizeWindow w
+                                    >> windows insertMaster))
+      )
     ]
 
-withFloat f w = gets windowset >>= \ws -> if (isFloat w ws)
-                                          then f w
-                                          else return ()
-isFloat w ws = M.member w $ W.floating ws
+noMask :: KeyMask
+noMask = 0
+
+whenFloat :: Window -> X () -> X ()
+whenFloat w f = isFloat w >>= \b -> when b f
+
+isFloat :: Window -> X Bool
+isFloat w = gets windowset >>= \ws -> return (M.member w $ W.floating ws)
 
 -- TODO: if we can determine what window is at a given x y coord, then
 {-
@@ -113,8 +124,8 @@ willFloat w = withDisplay $ \d -> do
                 sh <- io $ getWMNormalHints d w
                 let isFixedSize = sh_min_size sh /= Nothing && sh_min_size sh == sh_max_size sh
                 isTransient <- isJust <$> io (getTransientForHint d w)
-                ws <- gets windowset
-                return (isFixedSize || isTransient || isFloat w ws)
+                f <- isFloat w
+                return (isFixedSize || isTransient || f)
 
 shiftView w = W.greedyView w . W.shift w
 
