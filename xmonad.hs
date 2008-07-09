@@ -95,6 +95,7 @@ manageHook = composeAll
              , className =? "XDvi"            --> doF W.swapUp
              , className =? "GV"              --> doF W.swapUp
              , className =? "feh"             --> doFloat
+             , className =? "Vncviewer"       --> doFloat
              , manageDocks
              ] <+> doF W.swapDown
     where
