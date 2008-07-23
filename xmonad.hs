@@ -96,7 +96,7 @@ xpConfig = defaultXPConfig
 manageHook = composeAll
              [ className =? "Emacs"           --> doF (shiftView "dev" . insertMaster)
              , resource  =? "Navigator"       --> doF (shiftView "web")
-             , className =? "Pidgin"          --> doF (shiftView "com")
+             , className =? "Pidgin"          --> doF (W.shift "com")
              , className =? "Thunderbird-bin" --> doF (shiftView "com")
              -- floats should always appear at the very top
              , floating                       --> doF insertMaster
@@ -104,7 +104,7 @@ manageHook = composeAll
              , className =? "XDvi"            --> doF W.swapUp
              , className =? "GV"              --> doF W.swapUp
              , className =? "feh"             --> doFloat
-             , className =? "Vncviewer"       --> doFloat
+             , className =? "Gitk"            --> doFloat
              , manageDocks
              ] <+> doF W.swapDown
     where
