@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, TypeSynonymInstances #-}
+{-# LANGUAGE FlexibleInstances #-}
 import XMonad hiding (keys,layoutHook,logHook,manageHook,modMask,startupHook,workspaces)
 import qualified XMonad (keys,layoutHook,logHook,manageHook,modMask,startupHook,workspaces)
 import qualified XMonad.StackSet as W
@@ -6,9 +6,9 @@ import qualified XMonad.StackSet as W
 import XMonad.Hooks.EwmhDesktops (ewmhDesktopsLayout,ewmhDesktopsLogHook)
 import XMonad.Hooks.FadeInactive (fadeInactiveLogHook)
 import XMonad.Hooks.ManageDocks (avoidStruts,manageDocks,ToggleStruts(..))
-import XMonad.Layout.Grid (Grid(..))
 import XMonad.Layout.LayoutHints (layoutHints)
 import XMonad.Layout.NoBorders (smartBorders)
+import XMonad.Layout.PerRow (PerRow (..))
 import XMonad.Prompt
 import XMonad.Prompt.Shell
 import XMonad.Prompt.RunOrRaise
@@ -200,42 +200,3 @@ dropBoring :: Eq i => W.StackSet i l a s sd -> [W.Workspace i l a] -> [W.Workspa
 dropBoring s = reverse . dropWhile boring . reverse
     where boring (W.Workspace _ _ (Just _)) = False
           boring (W.Workspace i _ Nothing)  = i /= W.currentTag s
-
-----------------------------------------------------------------------
--- PerRow, A layout which gives each independent application it's own
--- row of windows. This only groups consecutive windows of an
--- application, so that changing the order of windows always has an
--- effect. It might be better to group them no matter what order they
--- come in, but I haven't worked out a way to do that that doesn't
--- result in very awkward behaviour.
-----------------------------------------------------------------------
-
-data PerRow a = PerRow deriving (Read, Show)
-
-instance LayoutClass PerRow Window where
-    doLayout PerRow r s = groupByM sameClass (W.integrate s) >>=
-                          \ws -> return ((arrange r ws),Nothing)
-    description _ = "PerRow"
-
--- span and groupBy lifted to monads, thanks to Cale on #haskell
-spanM             :: Monad m => (a -> m Bool) -> [a] -> m ([a],[a])
-spanM p []         = return ([],[])
-spanM p xs@(x:xs') = do v <- p x
-                        if v then do (ys,zs) <- spanM p xs'
-                                     return (x:ys,zs)
-                             else return ([], xs)
-
-groupByM           :: Monad m => (a -> a -> m Bool) -> [a] -> m [[a]]
-groupByM eq []     = return []
-groupByM eq (x:xs) = do (ys,zs) <- spanM (eq x) xs
-                        gs <- groupByM eq zs
-                        return ((x:ys) : gs)
-
-sameClass w1 w2 = flip runQuery w1 $ getClass w1 >>= \q -> getClass w2 =? q
-getClass w = liftX $ withDisplay $ \d -> fmap resClass $ io $ getClassHint d w
-
-arrange      :: Eq a => Rectangle -> [[a]] -> [(a, Rectangle)]
-arrange r ws = concat $ zipWith place (splitVertically (length ws) r) ws
-
-place      :: Rectangle -> [a] -> [(a, Rectangle)]
-place r ws = zip ws $ splitHorizontally (length ws) r
