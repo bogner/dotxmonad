@@ -67,9 +67,6 @@ mouse (XConfig {XMonad.modMask = modMask}) = M.fromList $
       )
     ]
 
-noMask :: KeyMask
-noMask = 0
-
 whenFloat :: Window -> X () -> X ()
 whenFloat w f = isFloat w >>= \b -> when b f
 
