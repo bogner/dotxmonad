@@ -54,9 +54,15 @@ keys = M.fromList $
        , ((mod1Mask,              xK_Tab), windows W.focusDown)
        -- since we have alt-tab, super-tab might as well cycle backwards
        , ((modMask,               xK_Tab), windows W.focusUp)
+       , ((modMask,               xK_grave), windows viewPrev)
        , ((modMask,               xK_w), kill)
        , ((modMask .|. shiftMask, xK_slash), spawn "todo-notify.sh")
        ]
+
+viewPrev :: W.StackSet i l a s sd -> W.StackSet i l a s sd
+--viewHidden = W.view . head . W.hidden
+viewPrev s = s { W.current = (W.current s) { W.workspace = head (W.hidden s) }
+               , W.hidden = W.workspace (W.current s) : tail (W.hidden s) }
 
 mouse (XConfig {XMonad.modMask = modMask}) = M.fromList $
     [ ((modMask .|. shiftMask, button1), (\w -> focus w >> float w))
