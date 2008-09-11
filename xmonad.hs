@@ -15,12 +15,18 @@ import XMonad.Prompt.RunOrRaise
 import XMonad.Util.Run (runProcessWithInput)
 import XMonad.Util.WorkspaceCompare (getSortByIndex, WorkspaceSort)
 
+import Prelude hiding (catch)
+
 import Control.Applicative ((<$>))
+import Control.Exception (bracket, catch)
 import Control.Monad (filterM,liftM)
 import Control.Monad.State (when)
 import Data.Bits ((.|.))
-import Data.Maybe (isJust)
+import Data.List (insertBy)
+import Data.Maybe (isJust,fromMaybe)
+import Data.Monoid (Endo(..))
 import qualified Data.Map as M
+import Text.Regex.Posix ((=~))
 
 main = xmonad bogConfig
 
@@ -105,6 +111,9 @@ manageHook = composeAll
              , className =? "GV"              --> doF W.swapUp
              , className =? "feh"             --> doFloat
              , className =? "Gitk"            --> doFloat
+             , className =? "Meld"            --> doFloat
+             , title ~? "\"\\w+@\\w+ \\(0x[0-9]{2}\\)\""
+                         --> insertSorted
              , manageDocks
              ] <+> doF W.swapDown
     where
@@ -130,6 +139,42 @@ insertMaster :: W.StackSet i l a s sd -> W.StackSet i l a s sd
 insertMaster = W.modify' $ \c -> case c of
     W.Stack _ [] _  -> c    -- already master.
     W.Stack t ls rs -> W.Stack t [] (reverse ls ++ rs)
+
+avoidMaster :: W.StackSet i l a s sd -> W.StackSet i l a s sd
+avoidMaster = W.modify' $ \c -> case c of
+    W.Stack t [] (r:rs) -> W.Stack t [r] rs
+    otherwise           -> c
+
+insertSorted :: ManageHook
+insertSorted = do
+  t <- ask >>= titleOf
+  io $ putStrLn $ "new window: "++t
+  s <- liftX $ gets windowset
+  let ws = W.allWindows s
+  ts <- mapM (titleOf) ws
+  return $ Endo $ insertSorted' t (zip ws ts)
+
+insertSorted' :: String -> [(Window, String)] -> (WindowSet -> WindowSet)
+insertSorted' t m = W.modify' f
+    where f c@(W.Stack w ls rs) = W.Stack w (reverse ls') rs'
+              where (ls', (r:rs')) = span (/=w) ws
+                    ws = insertBy (\_ y -> compare t (name y)) w .
+                         filter (/=w) $ W.integrate c
+                    name x = fromMaybe (show x) . flip lookup m $ x
+
+-- | Return the title of a window.
+titleOf :: Window -> Query String
+titleOf w = liftX $ do
+    d <- asks display
+    let
+        getProp =
+            (internAtom d "_NET_WM_NAME" False >>= getTextProperty d w)
+                `catch` \_ -> getTextProperty d w wM_NAME
+        extract = fmap head . wcTextPropertyToTextList d
+    io $ bracket getProp (xFree . tp_value) extract `catch` \_ -> return ""
+
+-- | @q ~? x@. if the result of @q@ matches the Regex @x@, return 'True'.
+q ~? x = fmap (=~ x) q
 
 workspaces = ["web", "dev", "com"] ++ map show [4..9]
 
