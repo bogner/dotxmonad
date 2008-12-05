@@ -40,7 +40,7 @@ bogConfig = defaultConfig
             , XMonad.mouseBindings      = mouse
             , XMonad.normalBorderColor  = "#dcdccc"
             , XMonad.startupHook        = startupHook
-            , XMonad.terminal           = "urxvtcd"
+            , XMonad.terminal           = "dterm.sh"
             , XMonad.workspaces         = workspaces
             }
 
@@ -115,9 +115,17 @@ manageHook = composeAll
              -- i like these to show up in the master area when using emacs
              , className =? "XDvi"            --> doF W.swapUp
              , className =? "GV"              --> doF W.swapUp
+             -- apps that are bad at tiling
              , className =? "feh"             --> doFloat
              , className =? "Gitk"            --> doFloat
              , className =? "Meld"            --> doFloat
+             , className =? "Kompare"         --> doFloat
+             -- bitkeeper's dialogs have stupid names
+             , className ~? "(Diff|Rev)tool"  --> doFloat
+             , className ~? "Toplevel"        --> doFloat
+             --
+             , className =? "Mbrowse"         --> (doFloat <+> doF insertMaster)
+             --
              , title ~? "\"\\w+@\\w+ \\(0x[0-9]{2}\\)\""
                          --> insertSorted
              , manageDocks
@@ -193,7 +201,7 @@ layoutHook =
           tiled    = Tall nmaster delta (1/2)
           bigTiled = Tall nmaster delta (11/16)
           nmaster  = 1
-          delta    = 3/100
+          delta    = 1/200
 
 ----------------------------------------------------------------------
 -- We set initial layouts on our workspaces. Perhaps we should use
