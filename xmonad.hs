@@ -146,7 +146,7 @@ layoutHook =
     ewmhDesktopsLayout $ avoidStruts $
     fixed ||| bigTiled ||| Full
         where
-          fixed    = FixedColumn nmaster 20 80
+          fixed    = FixedColumn nmaster 20 80 10
           tiled    = Tall nmaster delta (1/2)
           bigTiled = Tall nmaster delta (11/16)
           nmaster  = 1
