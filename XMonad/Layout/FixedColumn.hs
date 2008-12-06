@@ -75,6 +75,8 @@ instance LayoutClass FixedColumn Window where
 
     description _ = "FixedColumn"
 
+-- | Determine the width of @w@ given that we would like it to be @n@
+--   columns wide
 widthCols :: Int -> Window -> X Int
 widthCols n w = withDisplay $ \d -> io $ do
     sh <- getWMNormalHints d w
