@@ -9,7 +9,10 @@
 -- Stability   :  unstable
 -- Portability :  unportable
 --
--- TODO: what is it?
+-- A layout much like Tall, but using a multiple of a window's minimum
+-- resize amount instead of a percentage of screen to decide where to
+-- split. This is useful when you usually leave a text editor or
+-- terminal in the master pane and like it to be 80 columns wide.
 --
 -----------------------------------------------------------------------------
 
@@ -24,6 +27,7 @@ import Data.Maybe (fromMaybe)
 import Graphics.X11.Xlib (Window(..), rect_width)
 import Graphics.X11.Xlib.Extras ( getWMNormalHints
                                 , getWindowAttributes
+                                , sh_base_size
                                 , sh_resize_inc
                                 , wa_border_width)
 
@@ -45,7 +49,12 @@ import XMonad.StackSet as W
 --
 -- "XMonad.Doc.Extending#Editing_the_layout_hook"
 
-data FixedColumn a = FixedColumn !Int !Int !Int deriving (Read, Show)
+-- | A tiling mode based on preserving a nice fixed width
+--   window. Supports 'Shrink', 'Expand' and 'IncMasterN'.
+data FixedColumn a = FixedColumn !Int -- ^ Number of windows in the master pane
+                                 !Int -- ^ Number to increment by when resizing
+                                 !Int -- ^ Default width of master pane
+                        deriving (Read, Show)
 
 instance LayoutClass FixedColumn Window where
     doLayout (FixedColumn nmaster _ ncol) r s = do
@@ -60,7 +69,7 @@ instance LayoutClass FixedColumn Window where
             msum [fmap resize     (fromMessage m)
                  ,fmap incmastern (fromMessage m)]
         where resize Shrink = FixedColumn nmaster delta (max 0 $ ncol - delta)
-              resize Expand = FixedColumn nmaster delta (min 1 $ ncol + delta)
+              resize Expand = FixedColumn nmaster delta (ncol + delta)
               incmastern (IncMasterN d) =
                   FixedColumn (max 0 (nmaster+d)) delta ncol
 
@@ -70,7 +79,7 @@ widthCols :: Int -> Window -> X Int
 widthCols n w = withDisplay $ \d -> io $ do
     sh <- getWMNormalHints d w
     bw <- fmap (fromIntegral . wa_border_width) $ getWindowAttributes d w
-    let oneCol = fromMaybe 5 (sh_resize_inc sh
-                              >>= \(x, y) -> return $ fromIntegral y)
-    io . putStrLn $ show n ++ " " ++ show oneCol
-    return $ 2 * bw + n * oneCol
+    let widthHint f = f sh >>= return . fromIntegral . fst
+        oneCol      = fromMaybe 10 $ widthHint sh_resize_inc
+        base        = fromMaybe 0 $ widthHint sh_base_size
+    return $ 2 * bw + base + n * oneCol
