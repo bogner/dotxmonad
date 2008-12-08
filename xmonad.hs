@@ -14,6 +14,7 @@ import XMonad.Prompt.Shell (shellPrompt)
 import XMonad.Prompt.RunOrRaise (runOrRaisePrompt)
 
 import Control.Applicative ((<$>))
+import Control.Monad (liftM)
 import Control.Monad.State (when)
 import Data.Bits ((.|.))
 import Data.Maybe (isJust)
@@ -122,6 +123,8 @@ manageHook = composeAll
              ] <+> doF W.swapDown
     where
       floating = (ask >>= liftX . willFloat)
+                 -- gnome panel's calendar does insane things when shifted
+                 <&&> (liftM not $ resource =? "gnome-panel")
 
 workspaces :: [[Char]]
 workspaces = ["web", "dev", "com"] ++ map show [4..9]
