@@ -2,10 +2,10 @@
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  XMonad.Layout.FixedColumn
--- Copyright   :  (c) Justin Bogner
+-- Copyright   :  (c) 2008 Justin Bogner <mail@justinbogner.com>
 -- License     :  BSD3-style (as xmonad)
 --
--- Maintainer  :  <mail@justinbogner.com>
+-- Maintainer  :  Justin Bogner <mail@justinbogner.com>
 -- Stability   :  unstable
 -- Portability :  unportable
 --
@@ -24,7 +24,7 @@ module XMonad.Layout.FixedColumn (
 
 import Control.Monad (msum)
 import Data.Maybe (fromMaybe)
-import Graphics.X11.Xlib (Window(..), rect_width)
+import Graphics.X11.Xlib (Window, rect_width)
 import Graphics.X11.Xlib.Extras ( getWMNormalHints
                                 , getWindowAttributes
                                 , sh_base_size

@@ -52,20 +52,23 @@ instance LayoutClass PerRow Window where
     description _ = "PerRow"
 
 -- span and groupBy lifted to monads, thanks to Cale on #haskell
-spanM             :: Monad m => (a -> m Bool) -> [a] -> m ([a],[a])
-spanM p []         = return ([],[])
+spanM              :: Monad m => (a -> m Bool) -> [a] -> m ([a],[a])
+spanM _ []         = return ([],[])
 spanM p xs@(x:xs') = do v <- p x
                         if v then do (ys,zs) <- spanM p xs'
                                      return (x:ys,zs)
                              else return ([], xs)
 
 groupByM           :: Monad m => (a -> a -> m Bool) -> [a] -> m [[a]]
-groupByM eq []     = return []
+groupByM _ []      = return []
 groupByM eq (x:xs) = do (ys,zs) <- spanM (eq x) xs
                         gs <- groupByM eq zs
                         return ((x:ys) : gs)
 
+sameClass       :: Window -> Window -> X Bool
 sameClass w1 w2 = flip runQuery w1 $ getClass w1 >>= \q -> getClass w2 =? q
+
+getClass   :: Window -> Query String
 getClass w = liftX $ withDisplay $ \d -> fmap resClass $ io $ getClassHint d w
 
 arrange      :: Eq a => Rectangle -> [[a]] -> [(a, Rectangle)]
