@@ -6,6 +6,7 @@ import qualified XMonad.StackSet as W
 import XMonad.Hooks.EwmhDesktops (ewmhDesktopsLayout,ewmhDesktopsLogHook)
 import XMonad.Hooks.FadeInactive (fadeInactiveLogHook)
 import XMonad.Hooks.ManageDocks (avoidStruts,manageDocks,ToggleStruts(..))
+import XMonad.Layout.FixedColumn (FixedColumn(..))
 import XMonad.Layout.LayoutHints (layoutHints)
 import XMonad.Layout.NoBorders (smartBorders)
 import XMonad.Layout.PerRow (PerRow (..))
@@ -196,8 +197,9 @@ layoutHook =
     smartBorders $
     layoutHints $
     ewmhDesktopsLayout $ avoidStruts $
-    tiled ||| bigTiled ||| Mirror tiled ||| PerRow ||| Full
+    fixed ||| bigTiled ||| Full
         where
+          fixed    = FixedColumn nmaster 20 80 10
           tiled    = Tall nmaster delta (1/2)
           bigTiled = Tall nmaster delta (11/16)
           nmaster  = 1
@@ -208,7 +210,7 @@ layoutHook =
 -- LayoutCombinators to clean this up, but this gets the job done.
 ----------------------------------------------------------------------
 
-startupHook = sequence_ $ zipWith workspaceLayout workspaces [ 4, 0, 3 ]
+startupHook = sequence_ $ zipWith workspaceLayout workspaces [ 2 ]
 
 -- Set the layout on a workspace
 workspaceLayout :: String -> Int -> X ()
