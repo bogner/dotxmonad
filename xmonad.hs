@@ -1,4 +1,3 @@
-{-# LANGUAGE FlexibleInstances #-}
 import XMonad hiding (keys,layoutHook,logHook,manageHook,modMask,workspaces)
 import qualified XMonad (keys,layoutHook,logHook,manageHook,modMask,workspaces)
 import qualified XMonad.StackSet as W
@@ -10,11 +9,9 @@ import XMonad.Hooks.ManageDocks (avoidStruts,manageDocks,ToggleStruts(..))
 import XMonad.Layout.FixedColumn (FixedColumn(..))
 import XMonad.Layout.LayoutHints (layoutHints)
 import XMonad.Layout.NoBorders (smartBorders)
-import XMonad.Prompt
-import XMonad.Prompt.Shell
-import XMonad.Prompt.RunOrRaise
-
-import Prelude hiding (catch)
+import qualified XMonad.Prompt as Prompt
+import XMonad.Prompt.Shell (shellPrompt)
+import XMonad.Prompt.RunOrRaise (runOrRaisePrompt)
 
 import Control.Applicative ((<$>))
 import Control.Monad.State (when)
@@ -26,26 +23,43 @@ import Text.Regex.Posix ((=~))
 main :: IO ()
 main = xmonad bogConfig
 
+------------------------------------------------------------
+-- Configurations
+------------------------------------------------------------
+
 bogConfig = defaultConfig
             { XMonad.focusedBorderColor = "#5c888b"
             , XMonad.keys               = addKeys keys
             , XMonad.layoutHook         = layoutHook
             , XMonad.logHook            = logHook
             , XMonad.manageHook         = manageHook
-            , XMonad.modMask            = modMask
+            , XMonad.modMask            = super
             , XMonad.mouseBindings      = mouse
-            , XMonad.normalBorderColor  = "#dcdccc"
+            , XMonad.normalBorderColor  = fgColor
             , XMonad.terminal           = "dterm.sh"
             , XMonad.workspaces         = workspaces
             }
 
-modMask :: KeyMask
-modMask = mod4Mask -- Super
+xpConfig :: Prompt.XPConfig
+xpConfig = Prompt.defaultXPConfig
+           { Prompt.font        = "xft:Bitstream Vera Sans Mono:pixelsize=10"
+           , Prompt.bgColor     = bgColor
+           , Prompt.fgColor     = fgColor
+           , Prompt.fgHLight    = bgColor
+           , Prompt.bgHLight    = fgColor
+           , Prompt.borderColor = fgColor
+           , Prompt.position    = Prompt.Top
+           }
 
-addKeys :: M.Map (ButtonMask, KeySym) (X ())
-           -> XConfig Layout
-           -> M.Map (ButtonMask, KeySym) (X ())
-addKeys k c = M.union k $ XMonad.keys defaultConfig c
+------------------------------------------------------------
+-- Configuration definitions
+------------------------------------------------------------
+super :: KeyMask
+super = mod4Mask
+
+bgColor, fgColor :: [Char]
+bgColor = "#3f3f3f"
+fgColor = "#dcdccc"
 
 keys :: M.Map (KeyMask, KeySym) (X ())
 keys = M.fromList $
@@ -60,14 +74,8 @@ keys = M.fromList $
        , ((super,           xK_w),     kill)
        , ((super .|. shift, xK_slash), spawn "todo-notify.sh")
        ]
-    where super = modMask
-          alt   = mod1Mask
+    where alt   = mod1Mask
           shift = shiftMask
-
-viewPrev :: W.StackSet i l a s sd -> W.StackSet i l a s sd
---viewHidden = W.view . head . W.hidden
-viewPrev s = s { W.current = (W.current s) { W.workspace = head (W.hidden s) }
-               , W.hidden = W.workspace (W.current s) : tail (W.hidden s) }
 
 mouse :: XConfig Layout -> M.Map (ButtonMask, Button) (Window -> X ())
 mouse _ = M.fromList $
@@ -75,28 +83,21 @@ mouse _ = M.fromList $
     , ((super,           button1), mouseAction mouseMoveWindow)
     , ((super .|. ctrl,  button1), mouseAction mouseResizeWindow)
     ]
-    where super = modMask
-          ctrl  = controlMask
+    where ctrl  = controlMask
           shift = shiftMask
           mouseAction f = \w -> whenFloat w (focus w >> f w
                                                      >> windows W.shiftMaster)
 
-whenFloat :: Window -> X () -> X ()
-whenFloat w f = isFloat w >>= \b -> when b f
+layoutHook =
+    smartBorders $
+    layoutHints $
+    ewmhDesktopsLayout $ avoidStruts $
+    FixedColumn 1 20 80 10 ||| Full
 
-isFloat :: Window -> X Bool
-isFloat w = gets windowset >>= \ws -> return (M.member w $ W.floating ws)
-
-xpConfig :: XPConfig
-xpConfig = defaultXPConfig
-           { font        = "xft:Bitstream Vera Sans Mono:pixelsize=10"
-           , bgColor     = "#3f3f3f"
-           , fgColor     = "#dcdccc"
-           , fgHLight    = "#3f3f3f"
-           , bgHLight    = "#dcdccc"
-           , borderColor = "#dcdccc"
-           , position    = Top
-           }
+logHook :: X ()
+logHook = ewmhDesktopsLogHook
+          >> ewmhFewerDesktopsLogHook
+          >> fadeInactiveLogHook 0xe0000000
 
 manageHook :: ManageHook
 manageHook = composeAll
@@ -122,9 +123,37 @@ manageHook = composeAll
     where
       floating = (ask >>= liftX . willFloat)
 
+workspaces :: [[Char]]
+workspaces = ["web", "dev", "com"] ++ map show [4..9]
+
+------------------------------------------------------------
+-- Utility Functions
+------------------------------------------------------------
+
+type KeyMap = M.Map (ButtonMask, KeySym) (X ())
+
+-- | Add the given keymap @k@ to the default XMonad keymap, choosing
+--   elements from @k@ in case of conflicting bindings.
+addKeys :: KeyMap -> XConfig Layout -> KeyMap
+addKeys k c = M.union k $ XMonad.keys defaultConfig c
+
+-- | View the most recently viewed workspace
+viewPrev :: W.StackSet i l a s sd -> W.StackSet i l a s sd
+viewPrev s = s { W.current = (W.current s) { W.workspace = head (W.hidden s) }
+               , W.hidden = W.workspace (W.current s) : tail (W.hidden s) }
+
+-- | Perform the X action defined by @f@ when @w@ is a floating
+--   window, and do nothing otherwise.
+whenFloat :: Window -> X () -> X ()
+whenFloat w f = isFloat w >>= \b -> when b f
+
+-- | Determine whether or not @w@ is a floating window
+isFloat :: Window -> X Bool
+isFloat w = gets windowset >>= \ws -> return (M.member w $ W.floating ws)
+
 -- This is logic copied from XMonad.Operations.manage, since
 -- manageHook is called before windows are floated
--- | Determine if @w@ will be a floating window
+-- | Determine if @w@ will be floated when it becomes managed.
 willFloat :: Window -> X Bool
 willFloat w = withDisplay $ \d -> do
                 sh <- io $ getWMNormalHints d w
@@ -134,21 +163,10 @@ willFloat w = withDisplay $ \d -> do
                 f <- isFloat w
                 return (isFixedSize || isTransient || f)
 
+-- | shift the focused window to workspace @w@, and follow it there
+shiftView :: (Ord a, Eq i, Eq s)
+             => i -> W.StackSet i l a s sd -> W.StackSet i l a s sd
 shiftView w = W.greedyView w . W.shift w
 
 -- | @q ~? x@. if the result of @q@ matches the Regex @x@, return 'True'.
 q ~? x = fmap (=~ x) q
-
-workspaces :: [[Char]]
-workspaces = ["web", "dev", "com"] ++ map show [4..9]
-
-layoutHook =
-    smartBorders $
-    layoutHints $
-    ewmhDesktopsLayout $ avoidStruts $
-    FixedColumn 1 20 80 10 ||| Full
-
-logHook :: X ()
-logHook = ewmhDesktopsLogHook
-          >> ewmhFewerDesktopsLogHook
-          >> fadeInactiveLogHook 0xe0000000
