@@ -115,6 +115,7 @@ manageHook = composeAll
              , className =? "Meld"           --> doFloat
              , className =? "Kompare"        --> doFloat
              , className =? "Mbrowse"        --> doFloat
+             , className =? "Zenity"         --> doFloat
              -- bitkeeper's dialogs have stupid names
              , className ~? "(Diff|Rev)tool" --> doFloat
              , className ~? "Toplevel"       --> doFloat
