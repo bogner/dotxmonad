@@ -51,10 +51,10 @@ import XMonad.StackSet as W
 
 -- | A tiling mode based on preserving a nice fixed width
 --   window. Supports 'Shrink', 'Expand' and 'IncMasterN'.
-data FixedColumn a = FixedColumn !Int -- ^ Number of windows in the master pane
-                                 !Int -- ^ Number to increment by when resizing
-                                 !Int -- ^ Default width of master pane
-                                 !Int -- ^ Column width for normal windows
+data FixedColumn a = FixedColumn !Int -- Number of windows in the master pane
+                                 !Int -- Number to increment by when resizing
+                                 !Int -- Default width of master pane
+                                 !Int -- Column width for normal windows
                         deriving (Read, Show)
 
 instance LayoutClass FixedColumn Window where
