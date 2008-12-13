@@ -106,16 +106,18 @@ manageHook = composeAll
              -- floats should always appear at the very top
              , floating                      --> doF W.shiftMaster
              -- Some windows should always come first...
-             , className =? "Emacs"          --> doF W.shiftMaster
-             , className =? "XDvi"           --> doF W.shiftMaster
-             , className =? "GV"             --> doF W.shiftMaster
+             , className <? [ "Emacs"
+                            , "XDvi"
+                            , "GV"
+                            ]                --> doF W.shiftMaster
              -- apps that are bad at tiling
-             , className =? "feh"            --> doFloat
-             , className =? "Gitk"           --> doFloat
-             , className =? "Meld"           --> doFloat
-             , className =? "Kompare"        --> doFloat
-             , className =? "Mbrowse"        --> doFloat
-             , className =? "Zenity"         --> doFloat
+             , className <? [ "feh"
+                            , "Gitk"
+                            , "Meld"
+                            , "Kompare"
+                            , "Mbrowse"
+                            , "Zenity"
+                            ]                --> doFloat
              -- bitkeeper's dialogs have stupid names
              , className ~? "(Diff|Rev)tool" --> doFloat
              , className ~? "Toplevel"       --> doFloat
@@ -174,3 +176,6 @@ shiftView w = W.greedyView w . W.shift w
 
 -- | @q ~? x@. if the result of @q@ matches the Regex @x@, return 'True'.
 q ~? x = fmap (=~ x) q
+
+-- | Return 'True' if @q@ is an element of @xs@
+q <? xs = fmap (flip elem xs) q
