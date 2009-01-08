@@ -37,7 +37,7 @@ bogConfig = defaultConfig
             , XMonad.modMask            = super
             , XMonad.mouseBindings      = mouse
             , XMonad.normalBorderColor  = fgColor
-            , XMonad.terminal           = "dterm.sh"
+            , XMonad.terminal           = "urxvtcd"
             , XMonad.workspaces         = workspaces
             }
 
@@ -68,15 +68,12 @@ keys = M.fromList $
        , ((super .|. shift, xK_p),     shellPrompt xpConfig)
        , ((super,           xK_b),     sendMessage ToggleStruts)
        -- alt-tab, for when others use my computer
-       , ((alt,             xK_Tab),   windows W.focusDown)
-       -- since we have alt-tab, super-tab might as well cycle backwards
-       , ((super,           xK_Tab),   windows W.focusUp)
+       , ((super,           xK_Tab),   windows W.focusDown)
        , ((super,           xK_grave), windows viewPrev)
        , ((super,           xK_w),     kill)
        , ((super .|. shift, xK_slash), spawn "todo-notify.sh")
        ]
-    where alt   = mod1Mask
-          shift = shiftMask
+    where shift = shiftMask
 
 mouse :: XConfig Layout -> M.Map (ButtonMask, Button) (Window -> X ())
 mouse _ = M.fromList $
