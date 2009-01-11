@@ -124,8 +124,11 @@ manageHook = composeAll
              ] <+> doF W.swapDown
     where
       floating = (ask >>= liftX . willFloat)
-                 -- gnome panel's calendar does insane things when shifted
-                 <&&> (liftM not $ resource =? "gnome-panel")
+                 -- gnome panel applets make everything shift around
+                 -- when shifted to master.
+                 <&&> (liftM not $ resource <? [ "gnome-panel"
+                                               , "mixer_applet2"
+                                               ])
 
 workspaces :: [[Char]]
 workspaces = ["web", "dev", "com"] ++ map show [4..9]
