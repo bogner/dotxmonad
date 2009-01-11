@@ -104,8 +104,9 @@ manageHook = composeAll
              , floating                      --> doF W.shiftMaster
              -- Some windows should always come first...
              , className <? [ "Emacs"
-                            , "XDvi"
                             , "GV"
+                            , "XDvi"
+                            , "Xpdf"
                             ]                --> doF W.shiftMaster
              -- apps that are bad at tiling
              , className <? [ "feh"
