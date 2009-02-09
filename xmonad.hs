@@ -4,7 +4,7 @@ import qualified XMonad (handleEventHook,keys,layoutHook,
                          logHook,manageHook,modMask,workspaces)
 import qualified XMonad.StackSet as W
 
-import XMonad.Hooks.EwmhDesktops (ewmhDesktopsEventHook,ewmhDesktopsLogHook)
+import XMonad.Hooks.EwmhDesktops (ewmhDesktopsEventHook)
 import XMonad.Hooks.EwmhFewerDesktops (ewmhFewerDesktopsLogHook)
 import XMonad.Hooks.FadeInactive (fadeInactiveLogHook)
 import XMonad.Hooks.ManageDocks (avoidStruts,manageDocks,ToggleStruts(..))
@@ -100,8 +100,7 @@ handleEventHook :: Event -> X All
 handleEventHook = ewmhDesktopsEventHook
 
 logHook :: X ()
-logHook = ewmhDesktopsLogHook
-          >> ewmhFewerDesktopsLogHook
+logHook = ewmhFewerDesktopsLogHook
           >> fadeInactiveLogHook 0xe0000000
 
 manageHook :: ManageHook
