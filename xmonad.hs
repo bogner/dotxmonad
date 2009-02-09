@@ -1,8 +1,10 @@
-import XMonad hiding (keys,layoutHook,logHook,manageHook,modMask,workspaces)
-import qualified XMonad (keys,layoutHook,logHook,manageHook,modMask,workspaces)
+import XMonad hiding (handleEventHook,keys,layoutHook,
+                      logHook,manageHook,modMask,workspaces)
+import qualified XMonad (handleEventHook,keys,layoutHook,
+                         logHook,manageHook,modMask,workspaces)
 import qualified XMonad.StackSet as W
 
-import XMonad.Hooks.EwmhDesktops (ewmhDesktopsLayout,ewmhDesktopsLogHook)
+import XMonad.Hooks.EwmhDesktops (ewmhDesktopsEventHook,ewmhDesktopsLogHook)
 import XMonad.Hooks.EwmhFewerDesktops (ewmhFewerDesktopsLogHook)
 import XMonad.Hooks.FadeInactive (fadeInactiveLogHook)
 import XMonad.Hooks.ManageDocks (avoidStruts,manageDocks,ToggleStruts(..))
@@ -18,6 +20,7 @@ import Control.Monad (liftM)
 import Control.Monad.State (when)
 import Data.Bits ((.|.))
 import Data.Maybe (isJust)
+import Data.Monoid (All)
 import qualified Data.Map as M
 import Text.Regex.Posix ((=~))
 
@@ -30,6 +33,7 @@ main = xmonad bogConfig
 
 bogConfig = defaultConfig
             { XMonad.focusedBorderColor = "#5c888b"
+            , XMonad.handleEventHook    = handleEventHook
             , XMonad.keys               = addKeys keys
             , XMonad.layoutHook         = layoutHook
             , XMonad.logHook            = logHook
@@ -89,8 +93,11 @@ mouse _ = M.fromList $
 layoutHook =
     smartBorders $
     layoutHints $
-    ewmhDesktopsLayout $ avoidStruts $
+    avoidStruts $
     FixedColumn 1 20 80 10 ||| Full
+
+handleEventHook :: Event -> X All
+handleEventHook = ewmhDesktopsEventHook
 
 logHook :: X ()
 logHook = ewmhDesktopsLogHook
