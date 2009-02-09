@@ -22,7 +22,6 @@ import Data.Bits ((.|.))
 import Data.Maybe (isJust)
 import Data.Monoid (All)
 import qualified Data.Map as M
-import Text.Regex.Posix ((=~))
 
 main :: IO ()
 main = xmonad bogConfig
@@ -122,9 +121,6 @@ manageHook = composeAll
                             , "Mbrowse"
                             , "Zenity"
                             ]                --> doFloat
-             -- bitkeeper's dialogs have stupid names
-             , className ~? "(Diff|Rev)tool" --> doFloat
-             , className ~? "Toplevel"       --> doFloat
              --
              , manageDocks
              ] <+> doF W.swapDown
@@ -180,9 +176,6 @@ willFloat w = withDisplay $ \d -> do
 shiftView :: (Ord a, Eq i, Eq s)
              => i -> W.StackSet i l a s sd -> W.StackSet i l a s sd
 shiftView w = W.greedyView w . W.shift w
-
--- | @q ~? x@. if the result of @q@ matches the Regex @x@, return 'True'.
-q ~? x = fmap (=~ x) q
 
 -- | Return 'True' if @q@ is an element of @xs@
 q <? xs = fmap (flip elem xs) q
