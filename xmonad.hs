@@ -138,7 +138,7 @@ manageHook = composeAll
                                                ])
 
 workspaces :: [[Char]]
-workspaces = ["web", "dev", "com"] ++ map show [4..9]
+workspaces = ["web", "dev"] ++ map show [3..9]
 
 ------------------------------------------------------------
 -- Utility Functions
