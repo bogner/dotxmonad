@@ -76,6 +76,11 @@ keys = M.fromList $
        , ((super,           xK_w),     kill)
        , ((super .|. shift, xK_slash), spawn "todo-notify.sh")
        ]
+       ++
+       [((m .|. super, k), windows $ f i)
+           | (i, k) <- zip workspaces [xK_1 .. xK_9]
+           , (f, m) <- [(W.view, 0), (W.shift, shift)]
+       ]
     where shift = shiftMask
 
 mouse :: XConfig Layout -> M.Map (ButtonMask, Button) (Window -> X ())
