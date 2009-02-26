@@ -121,9 +121,10 @@ manageHook = composeAll
              -- apps that are bad at tiling
              , className <? [ "feh"
                             , "Gitk"
-                            , "Meld"
                             , "Kompare"
+                            , "Meld"
                             , "Mbrowse"
+                            , "TransientShell"
                             , "Zenity"
                             ]                --> doFloat
              --
