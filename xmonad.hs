@@ -8,9 +8,11 @@ import XMonad.Hooks.EwmhDesktops (ewmhDesktopsEventHook)
 import XMonad.Hooks.EwmhFewerDesktops (ewmhFewerDesktopsLogHook)
 import XMonad.Hooks.FadeInactive (fadeInactiveLogHook)
 import XMonad.Hooks.ManageDocks (avoidStruts,manageDocks,ToggleStruts(..))
+import qualified XMonad.Layout.Decoration as Decoration
 import XMonad.Layout.FixedColumn (FixedColumn(..))
 import XMonad.Layout.LayoutHints (layoutHints)
-import XMonad.Layout.NoBorders (smartBorders)
+import XMonad.Layout.NoBorders (noBorders,smartBorders)
+import XMonad.Layout.Tabbed (tabbed,shrinkText)
 import qualified XMonad.Prompt as Prompt
 import XMonad.Prompt.Shell (shellPrompt)
 import XMonad.Prompt.RunOrRaise (runOrRaisePrompt)
@@ -31,7 +33,7 @@ main = xmonad bogConfig
 ------------------------------------------------------------
 
 bogConfig = defaultConfig
-            { XMonad.focusedBorderColor = "#5c888b"
+            { XMonad.focusedBorderColor = fgColor
             , XMonad.handleEventHook    = handleEventHook
             , XMonad.keys               = addKeys keys
             , XMonad.layoutHook         = layoutHook
@@ -39,21 +41,33 @@ bogConfig = defaultConfig
             , XMonad.manageHook         = manageHook
             , XMonad.modMask            = super
             , XMonad.mouseBindings      = mouse
-            , XMonad.normalBorderColor  = fgColor
+            , XMonad.normalBorderColor  = dimColor
             , XMonad.terminal           = "urxvtcd"
             , XMonad.workspaces         = workspaces
             }
 
 xpConfig :: Prompt.XPConfig
 xpConfig = Prompt.defaultXPConfig
-           { Prompt.font        = "xft:Bitstream Vera Sans Mono:pixelsize=10"
+           { Prompt.font        = font
            , Prompt.bgColor     = bgColor
            , Prompt.fgColor     = fgColor
            , Prompt.fgHLight    = bgColor
            , Prompt.bgHLight    = fgColor
-           , Prompt.borderColor = fgColor
+           , Prompt.borderColor = dimColor
            , Prompt.position    = Prompt.Top
            }
+
+theme :: Decoration.Theme
+theme = Decoration.defaultTheme
+        { Decoration.activeColor         = dimColor
+        , Decoration.inactiveColor       = bgColor
+        , Decoration.activeBorderColor   = dimColor
+        , Decoration.inactiveBorderColor = dimColor
+        , Decoration.activeTextColor     = fgColor
+        , Decoration.inactiveTextColor   = fgColor
+        , Decoration.fontName            = font
+        }
+
 
 ------------------------------------------------------------
 -- Configuration definitions
@@ -61,9 +75,11 @@ xpConfig = Prompt.defaultXPConfig
 super :: KeyMask
 super = mod4Mask
 
-bgColor, fgColor :: [Char]
-bgColor = "#3f3f3f"
-fgColor = "#dcdccc"
+bgColor, dimColor, fgColor, font :: [Char]
+bgColor  = "#3f3f3f"
+dimColor = "#5f5f5f"
+fgColor  = "#dcdccc"
+font     = "xft:Bitstream Vera Sans Mono-9"
 
 keys :: M.Map (KeyMask, KeySym) (X ())
 keys = M.fromList $
@@ -98,7 +114,7 @@ layoutHook =
     smartBorders $
     layoutHints $
     avoidStruts $
-    FixedColumn 1 20 80 10 ||| Full
+    FixedColumn 1 20 80 10 ||| (noBorders $ tabbed shrinkText theme)
 
 handleEventHook :: Event -> X All
 handleEventHook = ewmhDesktopsEventHook
