@@ -92,11 +92,12 @@ keys = M.fromList $
        , ((super,           xK_w),     kill)
        , ((super .|. shift, xK_slash), spawn "todo-notify.sh")
        ]
-       ++
-       [((m .|. super, k), windows $ f i)
-           | (i, k) <- zip workspaces [xK_1 .. xK_9]
-           , (f, m) <- [(W.view, 0), (W.shift, shift)]
+      ++
+       [((m .|. super, key), screenWorkspace sc >>= flip whenJust (windows . f))
+            | (key, sc) <- zip [xK_a, xK_s] [0..]
+            , (f, m) <- [(W.view, 0), (W.shift, shiftMask)]
        ]
+
     where shift = shiftMask
 
 mouse :: XConfig Layout -> M.Map (ButtonMask, Button) (Window -> X ())
@@ -140,6 +141,7 @@ manageHook = composeAll
                             , "Kompare"
                             , "Meld"
                             , "Mbrowse"
+                            , "Orage"
                             , "TransientShell"
                             , "Zenity"
                             ]                --> doFloat
@@ -155,7 +157,7 @@ manageHook = composeAll
                                                ])
 
 workspaces :: [[Char]]
-workspaces = ["web", "dev"] ++ map show [3..9]
+workspaces = ["αʹ", "βʹ", "γʹ", "δʹ", "εʹ", "ϝʹ", "ζʹ", "ηʹ", "θʹ", "ιʹ"]
 
 ------------------------------------------------------------
 -- Utility Functions
