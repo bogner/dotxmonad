@@ -142,6 +142,7 @@ manageHook = composeAll
                             , "Meld"
                             , "Mbrowse"
                             , "Orage"
+                            , "Pidgin"
                             , "TransientShell"
                             , "Zenity"
                             ]                --> doFloat
