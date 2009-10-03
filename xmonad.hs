@@ -13,9 +13,6 @@ import XMonad.Layout.FixedColumn (FixedColumn(..))
 import XMonad.Layout.LayoutHints (layoutHints)
 import XMonad.Layout.NoBorders (noBorders,smartBorders)
 import XMonad.Layout.Tabbed (tabbed,shrinkText)
-import qualified XMonad.Prompt as Prompt
-import XMonad.Prompt.Shell (shellPrompt)
-import XMonad.Prompt.RunOrRaise (runOrRaisePrompt)
 
 import Control.Applicative ((<$>))
 import Control.Monad (liftM)
@@ -45,17 +42,6 @@ bogConfig = defaultConfig
             , XMonad.workspaces         = workspaces
             }
 
-xpConfig :: Prompt.XPConfig
-xpConfig = Prompt.defaultXPConfig
-           { Prompt.font        = font
-           , Prompt.bgColor     = bgColor
-           , Prompt.fgColor     = fgColor
-           , Prompt.fgHLight    = bgColor
-           , Prompt.bgHLight    = fgColor
-           , Prompt.borderColor = dimColor
-           , Prompt.position    = Prompt.Top
-           }
-
 theme :: Decoration.Theme
 theme = Decoration.defaultTheme
         { Decoration.activeColor         = dimColor
@@ -82,9 +68,7 @@ font     = "xft:Bitstream Vera Sans Mono-9"
 
 keys :: M.Map (KeyMask, KeySym) (X ())
 keys = M.fromList $
-       [ ((super,           xK_p),     runOrRaisePrompt xpConfig)
-       , ((super .|. shift, xK_p),     shellPrompt xpConfig)
-       , ((super,           xK_b),     sendMessage ToggleStruts)
+       [ ((super,           xK_b),     sendMessage ToggleStruts)
        -- alt-tab, for when others use my computer
        , ((super,           xK_Tab),   windows W.focusDown)
        , ((super,           xK_grave), windows viewPrev)
@@ -121,13 +105,11 @@ handleEventHook = ewmhDesktopsEventHook
 
 logHook :: X ()
 logHook = ewmhFewerDesktopsLogHook
-          >> fadeInactiveLogHook 0xe0000000
 
 manageHook :: ManageHook
 manageHook = composeAll
-             [ resource  =? "Navigator"      --> doF (shiftView "web")
              -- floats should always appear at the very top
-             , floating                      --> doF W.shiftMaster
+             [ floating                      --> doF W.shiftMaster
              -- Some windows should always come first...
              , className <? [ "Emacs"
                             , "GV"
@@ -195,11 +177,6 @@ willFloat w = withDisplay $ \d -> do
                 isTransient <- isJust <$> io (getTransientForHint d w)
                 f <- isFloat w
                 return (isFixedSize || isTransient || f)
-
--- | shift the focused window to workspace @w@, and follow it there
-shiftView :: (Ord a, Eq i, Eq s)
-             => i -> W.StackSet i l a s sd -> W.StackSet i l a s sd
-shiftView w = W.greedyView w . W.shift w
 
 -- | Return 'True' if @q@ is an element of @xs@
 q <? xs = fmap (flip elem xs) q
