@@ -42,7 +42,6 @@ bogConfig = defaultConfig
             , XMonad.modMask            = super
             , XMonad.mouseBindings      = mouse
             , XMonad.normalBorderColor  = dimColor
-            , XMonad.terminal           = "urxvtcd"
             , XMonad.workspaces         = workspaces
             }
 
