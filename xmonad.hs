@@ -8,6 +8,7 @@ import XMonad.Hooks.EwmhDesktops (ewmhDesktopsEventHook)
 import XMonad.Hooks.EwmhFewerDesktops (ewmhFewerDesktopsLogHook)
 import XMonad.Hooks.FadeInactive (fadeInactiveLogHook)
 import XMonad.Hooks.ManageDocks (avoidStruts,manageDocks,ToggleStruts(..))
+import XMonad.Hooks.ManageHelpers (isFullscreen,doFullFloat)
 import qualified XMonad.Layout.Decoration as Decoration
 import XMonad.Layout.FixedColumn (FixedColumn(..))
 import XMonad.Layout.LayoutHints (layoutHints)
@@ -108,8 +109,9 @@ logHook = ewmhFewerDesktopsLogHook
 
 manageHook :: ManageHook
 manageHook = composeAll
+             [ isFullscreen --> doFullFloat
              -- floats should always appear at the very top
-             [ floating                      --> doF W.shiftMaster
+             , floating                      --> doF W.shiftMaster
              -- Some windows should always come first...
              , className <? [ "Emacs"
                             , "GV"
