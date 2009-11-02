@@ -17,6 +17,7 @@ import Control.Applicative ((<$>))
 import Control.Monad (liftM)
 import Control.Monad.State (when)
 import Data.Bits ((.|.))
+import Data.List (isSuffixOf)
 import Data.Maybe (isJust)
 import Data.Monoid (All)
 import qualified Data.Map as M
@@ -138,9 +139,7 @@ manageHook = composeAll
       floating = (ask >>= liftX . willFloat)
                  -- gnome panel applets make everything shift around
                  -- when shifted to master.
-                 <&&> (liftM not $ resource <? [ "gnome-panel"
-                                               , "mixer_applet2"
-                                               ])
+                 <&&> (liftM (not . isSuffixOf "-panel")) resource
 
 workspaces :: [[Char]]
 workspaces = ["αʹ", "βʹ", "γʹ", "δʹ", "εʹ", "ϝʹ", "ζʹ", "ηʹ", "θʹ", "ιʹ"]
