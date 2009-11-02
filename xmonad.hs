@@ -6,13 +6,13 @@ import qualified XMonad.StackSet as W
 import XMonad.Hooks.EwmhDesktops (ewmhDesktopsEventHook, ewmhDesktopsStartup)
 import XMonad.Hooks.EwmhFewerDesktops (ewmhFewerDesktopsLogHook)
 import XMonad.Hooks.FadeInactive (fadeInactiveLogHook)
-import XMonad.Hooks.ManageDocks (avoidStruts,manageDocks,ToggleStruts(..))
-import XMonad.Hooks.ManageHelpers (isFullscreen,doFullFloat)
+import XMonad.Hooks.ManageDocks (avoidStruts, manageDocks, ToggleStruts(..))
+import XMonad.Hooks.ManageHelpers (isFullscreen, doFullFloat)
 import qualified XMonad.Layout.Decoration as Decoration
 import XMonad.Layout.FixedColumn (FixedColumn(..))
 import XMonad.Layout.LayoutHints (layoutHints)
-import XMonad.Layout.NoBorders (noBorders,smartBorders)
-import XMonad.Layout.Tabbed (tabbed,shrinkText)
+import XMonad.Layout.NoBorders (noBorders, smartBorders)
+import XMonad.Layout.Tabbed (tabbed, shrinkText)
 
 import Control.Applicative ((<$>))
 import Control.Monad (liftM)
