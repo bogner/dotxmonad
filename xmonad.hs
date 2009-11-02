@@ -1,10 +1,9 @@
-import XMonad hiding (handleEventHook,keys,layoutHook,
-                      logHook,manageHook,modMask,workspaces)
-import qualified XMonad (handleEventHook,keys,layoutHook,
-                         logHook,manageHook,modMask,workspaces)
+import XMonad hiding (handleEventHook, keys, layoutHook, logHook,
+                      manageHook, modMask, startupHook, workspaces)
+import qualified XMonad
 import qualified XMonad.StackSet as W
 
-import XMonad.Hooks.EwmhDesktops (ewmhDesktopsEventHook)
+import XMonad.Hooks.EwmhDesktops (ewmhDesktopsEventHook, ewmhDesktopsStartup)
 import XMonad.Hooks.EwmhFewerDesktops (ewmhFewerDesktopsLogHook)
 import XMonad.Hooks.FadeInactive (fadeInactiveLogHook)
 import XMonad.Hooks.ManageDocks (avoidStruts,manageDocks,ToggleStruts(..))
@@ -40,6 +39,7 @@ bogConfig = defaultConfig
             , XMonad.modMask            = super
             , XMonad.mouseBindings      = mouse
             , XMonad.normalBorderColor  = dimColor
+            , XMonad.startupHook        = startupHook
             , XMonad.workspaces         = workspaces
             }
 
@@ -100,6 +100,9 @@ layoutHook =
     layoutHints $
     avoidStruts $
     FixedColumn 1 20 80 10 ||| (noBorders $ tabbed shrinkText theme)
+
+startupHook :: X ()
+startupHook = ewmhDesktopsStartup
 
 handleEventHook :: Event -> X All
 handleEventHook = ewmhDesktopsEventHook
