@@ -5,7 +5,6 @@ import qualified XMonad.StackSet as W
 
 import XMonad.Hooks.EwmhDesktops (ewmhDesktopsEventHook, ewmhDesktopsStartup)
 import XMonad.Hooks.EwmhFewerDesktops (ewmhFewerDesktopsLogHook)
-import XMonad.Hooks.FadeInactive (fadeInactiveLogHook)
 import XMonad.Hooks.ManageDocks (avoidStruts, manageDocks, ToggleStruts(..))
 import XMonad.Hooks.ManageHelpers (isFullscreen, doFullFloat)
 import qualified XMonad.Layout.Decoration as Decoration
