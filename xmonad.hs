@@ -127,6 +127,8 @@ manageHook = composeAll
                             , "Kompare"
                             , "Meld"
                             , "Mbrowse"
+                            , "Nm-connection-editor"
+                            , "Nvidia-settings"
                             , "Orage"
                             , "Pidgin"
                             , "TransientShell"
