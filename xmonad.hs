@@ -70,7 +70,6 @@ font     = "xft:Bitstream Vera Sans Mono-9"
 keys :: M.Map (KeyMask, KeySym) (X ())
 keys = M.fromList $
        [ ((super,           xK_b),     sendMessage ToggleStruts)
-       -- alt-tab, for when others use my computer
        , ((super,           xK_Tab),   windows W.focusDown)
        , ((super,           xK_grave), windows viewPrev)
        , ((super,           xK_w),     kill)
