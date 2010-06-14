@@ -7,9 +7,11 @@ import XMonad.Hooks.EwmhDesktops (ewmhDesktopsEventHook, ewmhDesktopsStartup)
 import XMonad.Hooks.EwmhFewerDesktops (ewmhFewerDesktopsLogHook)
 import XMonad.Hooks.ManageDocks (avoidStruts, manageDocks, ToggleStruts(..))
 import XMonad.Hooks.ManageHelpers (isFullscreen, doFullFloat)
+import XMonad.Hooks.Minimize (minimizeEventHook)
 import qualified XMonad.Layout.Decoration as Decoration
 import XMonad.Layout.FixedColumn (FixedColumn(..))
 import XMonad.Layout.LayoutHints (layoutHints)
+import XMonad.Layout.Minimize (minimize)
 import XMonad.Layout.NoBorders (noBorders, smartBorders)
 import XMonad.Layout.Tabbed (tabbed, shrinkText)
 
@@ -19,7 +21,7 @@ import Control.Monad.State (when)
 import Data.Bits ((.|.))
 import Data.List (isSuffixOf)
 import Data.Maybe (isJust)
-import Data.Monoid (All)
+import Data.Monoid (All, mappend)
 import qualified Data.Map as M
 
 main :: IO ()
@@ -98,13 +100,14 @@ layoutHook =
     smartBorders $
     layoutHints $
     avoidStruts $
+    minimize $
     FixedColumn 1 20 80 10 ||| (noBorders $ tabbed shrinkText theme)
 
 startupHook :: X ()
 startupHook = ewmhDesktopsStartup
 
 handleEventHook :: Event -> X All
-handleEventHook = ewmhDesktopsEventHook
+handleEventHook = ewmhDesktopsEventHook `mappend` minimizeEventHook
 
 logHook :: X ()
 logHook = ewmhFewerDesktopsLogHook
