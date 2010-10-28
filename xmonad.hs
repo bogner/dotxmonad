@@ -124,16 +124,18 @@ manageHook = composeAll
                             , "Xpdf"
                             ]                --> doF W.shiftMaster
              -- apps that are bad at tiling
-             , className <? [ "feh"
+             , className <? [ "Empathy"
+                            , "feh"
                             , "Gitk"
                             , "Kompare"
-                            , "Meld"
                             , "Mbrowse"
+                            , "Meld"
                             , "Nm-connection-editor"
                             , "Nvidia-settings"
                             , "Orage"
                             , "Pidgin"
                             , "TransientShell"
+                            , "Transmission"
                             , "Zenity"
                             ]                --> doFloat
              --
@@ -141,9 +143,10 @@ manageHook = composeAll
              ] <+> doF W.swapDown
     where
       floating = (ask >>= liftX . willFloat)
-                 -- gnome panel applets make everything shift around
-                 -- when shifted to master.
+                 -- panel applets make everything shift around when
+                 -- shifted to master.
                  <&&> (liftM (not . isSuffixOf "-panel")) resource
+                 <&&> (liftM (not . isSuffixOf "-applet")) resource
 
 workspaces :: [[Char]]
 workspaces = ["αʹ", "βʹ", "γʹ", "δʹ", "εʹ", "ϝʹ", "ζʹ", "ηʹ", "θʹ", "ιʹ"]
