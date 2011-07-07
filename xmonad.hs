@@ -3,6 +3,7 @@ import XMonad hiding (handleEventHook, keys, layoutHook, logHook,
 import qualified XMonad
 import qualified XMonad.StackSet as W
 
+import XMonad.Config.Gnome (gnomeRegister)
 import XMonad.Hooks.EwmhDesktops (ewmhDesktopsEventHook, ewmhDesktopsStartup)
 import XMonad.Hooks.EwmhFewerDesktops (ewmhFewerDesktopsLogHook)
 import XMonad.Hooks.ManageDocks (avoidStruts, manageDocks, ToggleStruts(..))
@@ -25,7 +26,7 @@ import Data.Monoid (All, mappend)
 import qualified Data.Map as M
 
 main :: IO ()
-main = xmonad bogConfig
+main = gnomeRegister >> xmonad bogConfig
 
 ------------------------------------------------------------
 -- Configurations
