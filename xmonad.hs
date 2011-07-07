@@ -127,7 +127,9 @@ manageHook = composeAll
              -- apps that are bad at tiling
              , className <? [ "Empathy"
                             , "feh"
+                            , "Gitg"
                             , "Gitk"
+                            , "Keepassx"
                             , "Kompare"
                             , "Mbrowse"
                             , "Meld"
