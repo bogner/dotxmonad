@@ -10,7 +10,7 @@ import XMonad.Hooks.ManageDocks (avoidStruts, manageDocks, ToggleStruts(..))
 import XMonad.Hooks.ManageHelpers (isFullscreen, doFullFloat)
 import XMonad.Hooks.Minimize (minimizeEventHook)
 import qualified XMonad.Layout.Decoration as Decoration
-import XMonad.Layout.FixedColumn (FixedColumn(..))
+import XMonad.Layout.FixedMultiColumn (FixedMultiColumn(..))
 import XMonad.Layout.LayoutHints (layoutHints)
 import XMonad.Layout.Minimize (minimize)
 import XMonad.Layout.NoBorders (noBorders, smartBorders)
@@ -102,7 +102,7 @@ layoutHook =
     layoutHints $
     avoidStruts $
     minimize $
-    FixedColumn 1 20 80 10 ||| (noBorders $ tabbed shrinkText theme)
+    FixedMultiColumn 1 20 80 10 ||| (noBorders $ tabbed shrinkText theme)
 
 startupHook :: X ()
 startupHook = ewmhDesktopsStartup
