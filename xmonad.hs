@@ -42,6 +42,7 @@ bogConfig = defaultConfig
             , XMonad.mouseBindings      = mouse
             , XMonad.normalBorderColor  = dimColor
             , XMonad.startupHook        = startupHook
+            , XMonad.terminal           = "st || xterm"
             , XMonad.workspaces         = workspaces
             }
 
