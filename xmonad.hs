@@ -34,7 +34,7 @@ main = xmonad bogConfig
 bogConfig = defaultConfig
             { XMonad.focusedBorderColor = fgColor
             , XMonad.handleEventHook    = handleEventHook
-            , XMonad.keys               = addKeys keys
+            , XMonad.keys               = keys
             , XMonad.layoutHook         = layoutHook
             , XMonad.logHook            = logHook
             , XMonad.manageHook         = manageHook
@@ -70,11 +70,12 @@ dimColor = "#5f5f5f"
 fgColor  = "#dcdccc"
 font     = "xft:Bitstream Vera Sans Mono-9"
 
-keys :: M.Map (KeyMask, KeySym) (X ())
-keys = M.fromList $
+addedKeys :: M.Map (KeyMask, KeySym) (X ())
+addedKeys = M.fromList $
        [ ((super,           xK_b),     sendMessage ToggleStruts)
        , ((super,           xK_Tab),   windows W.focusDown)
        , ((super,           xK_grave), windows viewPrev)
+       , ((super .|. ctrl,  xK_f),     sendMessage NextLayout)
        , ((super,           xK_w),     kill)
        , ((super .|. shift, xK_slash), spawn "todo-notify.sh")
        ]
@@ -84,7 +85,17 @@ keys = M.fromList $
             , (f, m) <- [(W.view, 0), (W.shift, shiftMask)]
        ]
 
-    where shift = shiftMask
+    where ctrl  = controlMask
+          shift = shiftMask
+
+
+removedKeys :: [(KeyMask, KeySym)]
+removedKeys = [(super, xK_space)]
+
+keys :: XConfig Layout -> KeyMap
+keys c = M.union addedKeys .
+         flip (foldr M.delete) removedKeys $
+         (XMonad.keys defaultConfig c)
 
 mouse :: XConfig Layout -> M.Map (ButtonMask, Button) (Window -> X ())
 mouse _ = M.fromList $
@@ -159,11 +170,6 @@ workspaces = ["αʹ", "βʹ", "γʹ", "δʹ", "εʹ", "ϝʹ", "ζʹ", "ηʹ", "�
 ------------------------------------------------------------
 
 type KeyMap = M.Map (ButtonMask, KeySym) (X ())
-
--- | Add the given keymap @k@ to the default XMonad keymap, choosing
---   elements from @k@ in case of conflicting bindings.
-addKeys :: KeyMap -> XConfig Layout -> KeyMap
-addKeys k c = M.union k $ XMonad.keys defaultConfig c
 
 -- | View the most recently viewed workspace
 viewPrev :: W.StackSet i l a s sd -> W.StackSet i l a s sd
